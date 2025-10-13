@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/13 16:29:27 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/13 17:11:13 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,6 +19,7 @@
 //		   maybe create a central parse_ function and separate single/double/unquoted since all these
 //		   are using the same parameters and variables
 //		5. Check the error messages and choose whether to follow bash or have own (consistent!) system
+//		6. Go over all functions and check that everything is free'd if something fails partway
 //
 // 1. Double check allowed functions (memcpy, realloc, etc. used but not in subject; write own/convert to ft_ versions)
 // 2. Adjust main to check for leaks with valgrind without force interrupting the program
@@ -105,10 +106,11 @@ t_redir		*new_redir(t_token_type type, char *target);
 char		*get_env_value(const char *name);
 char		*get_exit_status_str();
 
-/* buffer helpers */
+/* buffer/expansion helpers */
 int			ensure_buffer_capacity(t_dynamic_buf *dynamic_buf, size_t need);
 int			append_char(t_dynamic_buf *dynamic_buf, char c);
 int			append_str(t_dynamic_buf *dynamic_buf, const char *s);
+char		*expand_variable(const char *s, size_t index, size_t *j);
 
 /* parse small parts */
 int			parse_single_quote(const char *s, size_t *i, char **out);
@@ -315,17 +317,34 @@ int	append_str(t_dynamic_buf *dynamic_buf, const char *s)
 	return (0);
 }
 
-// FIXME: too long, too many parameters (maybe put buf, len, and cap into a struct)
+/* here to make expand_dollar smaller; TODO: documentation (mention advancing j) */
+char	*expand_variable(const char *s, size_t index, size_t *j)
+{
+	size_t	name_start; // index where the variable name starts (first char after $ that is alphabetic or underscore)
+	char	*name;		// temp string holding the variable name extracted from the input (e.g., "PATH") before calling getenv(name)
+	char	*result;
+
+	result = NULL;
+	name_start = index;												// TODO: figure out and double check
+	while (isalnum((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
+		index++;
+	name = strdup_range(s, name_start, index);
+	if (!name)
+		return (NULL);
+	result = get_env_value(name);
+	free(name);
+	*j = index;
+	return (result);
+}
+
+// FIXME: too long
 /* Helper to expand $ while parsing double quotes or unquoted words. Append the
 expanded result to the growing buffer; return 0 on success, -1 on failure. */
 int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf)
 {
 	size_t	index; 		// current scanning index after encountering $; points at the next char to examine
-	size_t	name_start; // index where the variable name starts (first char after $ that is alphabetic or underscore)
 	char	*expanded; 	// the string result of the expansion (value to insert into the output buffer)
-	char	*name; 		// temp string holding the variable name extracted from the input (e.g., "PATH") before calling getenv(name)
 
-	expanded = NULL;
 	index = *j + 1;
 	if (s[index] == '?')
 	{
@@ -336,31 +355,20 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf)
 	}
 	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
 	{
-		name_start = index;												// TODO: figure out and double check
-		while (isalnum((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
-			index++;
-		name = strdup_range(s, name_start, index);
-		if (!name)
+		expanded = expand_variable(s, index, j);		// *j is incremented inside
+		if (!expanded)
 			return (-1);
-		expanded = get_env_value(name);
-		free(name);
-		*j = index;
 	}
-	else
+	else // literal $; TODO: double check if this is how bash does it
 	{
-		/* literal $ */
 		if (append_char(dynamic_buf, '$') != 0)
 			return (-1);
-		*j = *j + 1;
+		*j += 1;
 		return (0);
 	}
 	if (append_str(dynamic_buf, expanded) != 0)
-	{
-		free(expanded);
-		return (-1);
-	}
-	free(expanded);
-	return (0);
+		return (free(expanded), -1);
+	return (free(expanded), 0);
 }
 
 /* Parse single quoted literal (no expansion) and store it in *out;
