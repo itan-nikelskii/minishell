@@ -22,16 +22,19 @@
 int	execute_command(t_command *cmd, t_shell *shell)
 {
 	int	cmd_count;
+	int	exit_status;
 
 	if (!cmd || !shell)
 		return (1);
 	cmd_count = count_commands(cmd);
 	if (cmd_count == 1)
-		return (execute_single_command(cmd, shell));
+		exit_status = execute_single_command(cmd, shell);
 	else if (cmd_count == 2)
-		return (execute_pipeline(cmd, shell));
+		exit_status = execute_pipeline(cmd, shell);
 	else
-		return (execute_pipeline_multi(cmd, shell));
+		exit_status = execute_pipeline_multi(cmd, shell);
+	shell->last_exit_status = exit_status;
+	return (exit_status);
 }
 
 /**
@@ -90,6 +93,5 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 	}
 	else
 		exit_status = execute_external(cmd, shell);
-	shell->last_exit_status = exit_status;
 	return (exit_status);
 }

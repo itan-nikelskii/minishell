@@ -113,10 +113,21 @@ t_token		*new_token(t_token_type type, char *text);
 int			append_token(t_token **head, t_token **tail, t_token *node);
 t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 
+/* FIX ISSUE 4: Shell struct definition (minimal, matches minishell.h) */
+typedef struct s_shell
+{
+	char	**envp;
+	char	**xenv;
+	int		last_exit_status;
+	int		stdin_backup;
+	int		stdout_backup;
+}	t_shell;
+
 /* env helpers */
 // FIX ISSUE 2: Using executor's get_env_value() instead
 extern char	*get_env_value(char *key, char **envp);
-char		*get_exit_status_str();
+// FIX ISSUE 4: Now can access shell->last_exit_status
+char		*get_exit_status_str(t_shell *shell);
 
 /* buffer/expansion helpers */
 int			ensure_buffer_capacity(t_dynamic_buf *dynamic_buf, size_t need);
@@ -126,14 +137,14 @@ char		*expand_variable(const char *s, size_t index, size_t *j, char **envp);
 
 /* parse small parts */
 int			parse_single_quote(const char *s, size_t *i, char **out);
-int			parse_double_quote(const char *s, size_t *i, char **out, char **envp);
-int			parse_unquoted_word(const char *s, size_t *i, char **out, char **envp);
-int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **envp);
+int			parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
+int			parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
+int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh);
 
 /* tokenize helpers */
 int			create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail);
 int			create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail);
-int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp);
+int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell);
 
 /* deal with pipes */
 int			validate_pipes(t_token *tokens, char **error);							// NEW! checks leading/double pipes
@@ -141,7 +152,8 @@ int			strip_trailing_pipe(t_token **tokens, bool *incomplete);				// NEW! remove
 int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);		// NEW! combine the two functions above
 
 /* top-level tokenize & parse */
-t_token		*tokenize(const char *line, char **error, char **envp);
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
+t_token		*tokenize(const char *line, char **error, t_shell *shell);
 size_t		count_words_in_segment(t_token *t);
 int			consume_redirection_target(t_token *token, t_command *cmd);
 int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
@@ -150,7 +162,8 @@ t_command	*build_command_from_tokens(t_token **tp);
 t_command	*parse_tokens_to_commands(t_token *t);
 
 /* top-level parse entrypoint (use in main) */
-int			parse(const char *line, t_parse_result *result, char **envp);
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
+int			parse(const char *line, t_parse_result *result, t_shell *shell);
 
 /* cleanup */
 void		free_tokens(t_token *t);
@@ -258,17 +271,39 @@ t_dynamic_buf	*dynbuf_create_and_init(void)
 
 // FIX ISSUE 2: Removed parser_get_env_value() - using executor's get_env_value() instead
 
-/* Get the exit status string; FIXME: actually implement this in the execution part */
-char	*get_exit_status_str()
+/* FIX ISSUE 4: Get exit status from shell instead of hardcoded "0" */
+char	*get_exit_status_str(t_shell *shell)
 {
-	char	*result;
+	char	buffer[12];
+	int		n;
+	int		len;
+	int		i;
 
-	result = malloc(2);
-	if (!result)
-		return (NULL);
-	result[0] = '0';
-	result[1] = '\0';
-	return (result);
+	if (!shell)
+		n = 0;
+	else
+		n = shell->last_exit_status;
+	len = 0;
+	if (n == 0)
+		buffer[len++] = '0';
+	else
+	{
+		while (n > 0)
+		{
+			buffer[len++] = (n % 10) + '0';
+			n /= 10;
+		}
+		i = 0;
+		while (i < len / 2)
+		{
+			buffer[i] ^= buffer[len - 1 - i];
+			buffer[len - 1 - i] ^= buffer[i];
+			buffer[i] ^= buffer[len - 1 - i];
+			i++;
+		}
+	}
+	buffer[len] = '\0';
+	return (strdup(buffer));
 }
 
 /* Ensure buffer capacity for 'need' amount of bytes and grow the buffer with
@@ -351,8 +386,8 @@ char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 	return (result);
 }
 
-/* FIX ISSUE 2: Added char **envp parameter */
-int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **envp)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh)
 {
 	size_t	index;
 	char	*expanded;
@@ -360,7 +395,7 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **e
 	index = *j + 1;
 	if (s[index] == '?')
 	{
-		expanded = get_exit_status_str();
+		expanded = get_exit_status_str(sh);
 		if (!expanded)
 			return (-1);
 		*j = index + 1;
@@ -373,12 +408,12 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **e
 	}
 	else
 	{
-		if (append_char(dynamic_buf, '$') != 0)
+		if (append_char(buf, '$') != 0)
 			return (-1);
 		*j += 1;
 		return (0);
 	}
-	if (append_str(dynamic_buf, expanded) != 0)
+	if (append_str(buf, expanded) != 0)
 		return (free(expanded), -1);
 	return (free(expanded), 0);
 }
@@ -405,8 +440,8 @@ int	parse_single_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* FIX ISSUE 2: Added char **envp parameter */
-int	parse_double_quote(const char *s, size_t *i, char **out, char **envp)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -419,7 +454,7 @@ int	parse_double_quote(const char *s, size_t *i, char **out, char **envp)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, envp) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -434,8 +469,8 @@ int	parse_double_quote(const char *s, size_t *i, char **out, char **envp)
 	return (0);
 }
 
-/* FIX ISSUE 2: Added char **envp parameter */
-int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -448,7 +483,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, envp) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -511,8 +546,8 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	return (0);
 }
 
-/* FIX ISSUE 1+2: Coalescere segments + use envp for expansion */
-int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp)
+/* FIX ISSUE 1+2+4: Coalescere segments + use envp and shell for expansion */
+int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell)
 {
 	t_dynamic_buf	*buf;
 	bool			had_quote;
@@ -535,13 +570,13 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 		}
 		else if (line[*i] == '"')
 		{
-			if (parse_double_quote(line, i, &segment, envp) != 0)
+			if (parse_double_quote(line, i, &segment, envp, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 			had_quote = true;
 		}
 		else
 		{
-			if (parse_unquoted_word(line, i, &segment, envp) != 0)
+			if (parse_unquoted_word(line, i, &segment, envp, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 		}
 		if (append_str(buf, segment) != 0)
@@ -559,7 +594,8 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 }
 
 /* FIX ISSUE 2: Added char **envp parameter */
-t_token	*tokenize(const char *line, char **error, char **envp)
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
+t_token	*tokenize(const char *line, char **error, t_shell *shell)
 {
 	t_token	*head;
 	t_token	*tail;
@@ -605,7 +641,7 @@ t_token	*tokenize(const char *line, char **error, char **envp)
 		}
 		if (c == '\'' || c == '"' || is_word_char(c))
 		{
-			if (create_token_quote_or_word(line, &i, &head, &tail, envp) != 0)
+			if (create_token_quote_or_word(line, &i, &head, &tail, shell->envp, shell) != 0)
 			{
 				*error = strdup("Parse error in word/quote");
 				free_tokens(head);
@@ -768,8 +804,18 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 		free(target);
 		return (-1);
 	}
-	redir->next = cmd->redirs;
-	cmd->redirs = redir;
+	// FIX ISSUE 3: Append to end instead of prepend to head
+	// Old: prepend created reversed list (last-typed processed first)
+	// New: append maintains correct order (last-typed processed last)
+	if (!cmd->redirs)
+		cmd->redirs = redir;
+	else
+	{
+		t_redir *last = cmd->redirs;
+		while (last->next)
+			last = last->next;
+		last->next = redir;
+	}
 	return (0);
 }
 
@@ -869,7 +915,8 @@ t_command	*parse_tokens_to_commands(t_token *t)
 
 // FIXME: too long
 /* FIX ISSUE 2: Added char **envp parameter */
-int	parse(const char *line, t_parse_result *result, char **envp)
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
+int	parse(const char *line, t_parse_result *result, t_shell *shell)
 {
 	t_token		*tokens;
 	char		*tok_err;
@@ -878,7 +925,7 @@ int	parse(const char *line, t_parse_result *result, char **envp)
 		return (-1);
 	tokens = NULL;
 	tok_err = NULL;
-	tokens = tokenize(line, &tok_err, envp);
+	tokens = tokenize(line, &tok_err, shell);
 	if (!tokens)
 	{
 		if (tok_err)

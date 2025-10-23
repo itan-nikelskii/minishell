@@ -94,7 +94,7 @@ static void	process_line(char *line, t_shell *shell)
 	result.commands = NULL;
 	result.error = NULL;
 	result.incomplete_pipe = false;
-	if (parse(line, &result, shell->envp) != 0)
+	if (parse(line, &result, shell) != 0)
 		return (print_error(NULL, "internal parse error"), free(line));
 	if (result.error)
 		return (handle_parse_error(&result, line));

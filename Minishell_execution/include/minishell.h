@@ -243,7 +243,7 @@ void	reset_signals(void);
 /*                              PARSER                                        */
 /* ************************************************************************** */
 
-int		parse(const char *line, t_parse_result *result, char **envp);
+int		parse(const char *line, t_parse_result *result, t_shell *shell);
 void	free_commands(t_command *cmd);
 
 /* ************************************************************************** */
