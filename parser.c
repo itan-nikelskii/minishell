@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/13 17:11:13 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/23 09:53:16 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,6 +35,7 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -60,11 +61,12 @@ typedef enum e_token_type
 	TOKEN_HEREDOC		// <<
 }	t_token_type;
 
-/* Token structure */		// TODO: figure out if it's a good idea to store single/double quotes like in my old version
+/* Token structure */
 typedef struct s_token
 {
 	t_token_type	type;
 	char			*text;
+	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
 	struct s_token	*next;
 }	t_token;
 
@@ -73,6 +75,7 @@ typedef struct s_redir
 {
 	t_token_type	type;		// type of redirection token
 	char			*target;	// filename (or heredoc delimiter) string
+	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
 	struct s_redir	*next;
 }	t_redir;
 
@@ -100,7 +103,7 @@ char		*strdup_range(const char *s, size_t from, size_t to);
 int			is_word_char(char c);
 t_token		*new_token(t_token_type type, char *text);
 int			append_token(t_token **head, t_token **tail, t_token *node);
-t_redir		*new_redir(t_token_type type, char *target);
+t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 
 /* env helpers */
 char		*get_env_value(const char *name);
@@ -177,6 +180,7 @@ t_token	*new_token(t_token_type type, char *text)
 		return (NULL);
 	token->type = type;
 	token->text = text;
+	token->was_quoted = false;
 	token->next = NULL;
 	return (token);
 }
@@ -201,7 +205,7 @@ int	append_token(t_token **head, t_token **tail, t_token *node)
 }
 
 /* Create and return a new redirection node. */
-t_redir	*new_redir(t_token_type type, char *target)
+t_redir	*new_redir(t_token_type type, char *target, bool was_quoted)
 {
 	t_redir	*redir;
 
@@ -210,6 +214,7 @@ t_redir	*new_redir(t_token_type type, char *target)
 		return NULL;
 	redir->type = type;
 	redir->target = target;
+	redir->was_quoted = was_quoted;
 	redir->next = NULL;
 	return (redir);
 }
@@ -520,6 +525,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	token = new_token(TOKEN_WORD, txt);
 	if (!token)
 		return (free(txt), -1);
+	token->was_quoted = (line[*i] == '\'' || line[*i] == '"');
 	if (append_token(head, tail, token) != 0)
 	{
 		free(token->text);
@@ -636,7 +642,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 	target = strdup(token->text);
 	if (!target)
 		return (-1);
-	redir = new_redir(redir_type, target);
+	redir = new_redir(redir_type, target, token->was_quoted);
 	if (!redir)
 	{
 		free(target);
