@@ -3,16 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 15:13:13 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/23 19:31:20 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-#include <readline/readline.h>
-#include <readline/history.h>
 
 /**
  * Initialize shell state
@@ -66,7 +64,22 @@ static void	cleanup_shell(t_shell *shell)
 	free(shell);
 }
 
-/** 
+/**
+ * Handle parse errors
+ * @param result: Parse result with error message
+ * @param line: Input line to free
+ */
+static void	handle_parse_error(t_parse_result *result, char *line)
+{
+	if (result->error)
+	{
+		print_error(NULL, result->error);
+		free(result->error);
+	}
+	free(line);
+}
+
+/**
  * Process a single input line: parse and execute
  * @param line: Input line from readline
  * @param shell: Shell state
@@ -81,19 +94,10 @@ static void	process_line(char *line, t_shell *shell)
 	result.commands = NULL;
 	result.error = NULL;
 	result.incomplete_pipe = false;
-	if (parse(line, &result) != 0)
-	{
-		ft_putstr_fd("minishell: internal parse error\n", STDERR_FILENO);
-		return (free(line));
-	}
+	if (parse(line, &result, shell->envp) != 0)
+		return (print_error(NULL, "internal parse error"), free(line));
 	if (result.error)
-	{
-		ft_putstr_fd("minishell: ", STDERR_FILENO);
-		ft_putstr_fd(result.error, STDERR_FILENO);
-		ft_putstr_fd("\n", STDERR_FILENO);
-		free(result.error);
-		return (free(line));
-	}
+		return (handle_parse_error(&result, line));
 	if (result.commands)
 	{
 		execute_command(result.commands, shell);
@@ -104,6 +108,10 @@ static void	process_line(char *line, t_shell *shell)
 
 /**
  * Main entry point for minishell
+ * @param argc: Argument count
+ * @param argv: Argument vector
+ * @param envp: Environment variables
+ * @return Exit status
  */
 int	main(int argc, char **argv, char **envp)
 {

@@ -114,26 +114,26 @@ int			append_token(t_token **head, t_token **tail, t_token *node);
 t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 
 /* env helpers */
-// EDITED: Renamed from get_env_value() to avoid linker conflict with path_resolver.c
-char		*parser_get_env_value(const char *name);
+// FIX ISSUE 2: Using executor's get_env_value() instead
+extern char	*get_env_value(char *key, char **envp);
 char		*get_exit_status_str();
 
 /* buffer/expansion helpers */
 int			ensure_buffer_capacity(t_dynamic_buf *dynamic_buf, size_t need);
 int			append_char(t_dynamic_buf *dynamic_buf, char c);
 int			append_str(t_dynamic_buf *dynamic_buf, const char *s);
-char		*expand_variable(const char *s, size_t index, size_t *j);
+char		*expand_variable(const char *s, size_t index, size_t *j, char **envp);
 
 /* parse small parts */
 int			parse_single_quote(const char *s, size_t *i, char **out);
-int			parse_double_quote(const char *s, size_t *i, char **out);
-int			parse_unquoted_word(const char *s, size_t *i, char **out);
-int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf);
+int			parse_double_quote(const char *s, size_t *i, char **out, char **envp);
+int			parse_unquoted_word(const char *s, size_t *i, char **out, char **envp);
+int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **envp);
 
 /* tokenize helpers */
 int			create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail);
 int			create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail);
-int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail);
+int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp);
 
 /* deal with pipes */
 int			validate_pipes(t_token *tokens, char **error);							// NEW! checks leading/double pipes
@@ -141,7 +141,7 @@ int			strip_trailing_pipe(t_token **tokens, bool *incomplete);				// NEW! remove
 int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);		// NEW! combine the two functions above
 
 /* top-level tokenize & parse */
-t_token		*tokenize(const char *line, char **error);
+t_token		*tokenize(const char *line, char **error, char **envp);
 size_t		count_words_in_segment(t_token *t);
 int			consume_redirection_target(t_token *token, t_command *cmd);
 int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
@@ -150,7 +150,7 @@ t_command	*build_command_from_tokens(t_token **tp);
 t_command	*parse_tokens_to_commands(t_token *t);
 
 /* top-level parse entrypoint (use in main) */
-int			parse(const char *line, t_parse_result *result);
+int			parse(const char *line, t_parse_result *result, char **envp);
 
 /* cleanup */
 void		free_tokens(t_token *t);
@@ -256,20 +256,7 @@ t_dynamic_buf	*dynbuf_create_and_init(void)
 
 /* ====================== Variable expansion helpers ====================== */
 
-// EDITED: Renamed from get_env_value() to avoid linker conflict with path_resolver.c
-/* Get the environment variable value (caller frees the returned pointer). */
-char *parser_get_env_value(const char *name)
-{
-	char	*value;
-	char	*out;
-
-	value = getenv(name);
-	if (value == NULL)
-		out = strdup("");			// TODO: switch to the ft_ version later
-	else
-		out = strdup(value);
-	return (out);					// TODO: when trying to free value, get a segfault; why?
-}
+// FIX ISSUE 2: Removed parser_get_env_value() - using executor's get_env_value() instead
 
 /* Get the exit status string; FIXME: actually implement this in the execution part */
 char	*get_exit_status_str()
@@ -340,34 +327,35 @@ int	append_str(t_dynamic_buf *dynamic_buf, const char *s)
 	return (0);
 }
 
-/* here to make expand_dollar smaller; TODO: documentation (mention advancing j) */
-char	*expand_variable(const char *s, size_t index, size_t *j)
+/* FIX ISSUE 2: Added char **envp parameter to use executor's get_env_value() */
+char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 {
-	size_t	name_start; // index where the variable name starts (first char after $ that is alphabetic or underscore)
-	char	*name;		// temp string holding the variable name extracted from the input (e.g., "PATH") before calling getenv(name)
+	size_t	name_start;
+	char	*name;
+	char	*value;
 	char	*result;
 
-	result = NULL;
-	name_start = index;												// TODO: figure out and double check
-	while (isalnum((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
+	name_start = index;
+	while (isalnum((unsigned char)s[index]) || s[index] == '_')
 		index++;
 	name = strdup_range(s, name_start, index);
 	if (!name)
 		return (NULL);
-	// EDITED: Updated function call after renaming get_env_value() to parser_get_env_value()
-	result = parser_get_env_value(name);
+	value = get_env_value(name, envp);
+	if (value)
+		result = strdup(value);
+	else
+		result = strdup("");
 	free(name);
 	*j = index;
 	return (result);
 }
 
-// FIXME: too long
-/* Helper to expand $ while parsing double quotes or unquoted words. Append the
-expanded result to the growing buffer; return 0 on success, -1 on failure. */
-int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf)
+/* FIX ISSUE 2: Added char **envp parameter */
+int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf, char **envp)
 {
-	size_t	index; 		// current scanning index after encountering $; points at the next char to examine
-	char	*expanded; 	// the string result of the expansion (value to insert into the output buffer)
+	size_t	index;
+	char	*expanded;
 
 	index = *j + 1;
 	if (s[index] == '?')
@@ -377,13 +365,13 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *dynamic_buf)
 			return (-1);
 		*j = index + 1;
 	}
-	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
+	else if (isalpha((unsigned char)s[index]) || s[index] == '_')
 	{
-		expanded = expand_variable(s, index, j);		// *j is incremented inside
+		expanded = expand_variable(s, index, j, envp);
 		if (!expanded)
 			return (-1);
 	}
-	else // literal $; TODO: double check if this is how bash does it
+	else
 	{
 		if (append_char(dynamic_buf, '$') != 0)
 			return (-1);
@@ -417,9 +405,8 @@ int	parse_single_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* Parse double-quoted string, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
-int	parse_double_quote(const char *s, size_t *i, char **out)
+/* FIX ISSUE 2: Added char **envp parameter */
+int	parse_double_quote(const char *s, size_t *i, char **out, char **envp)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -432,9 +419,9 @@ int	parse_double_quote(const char *s, size_t *i, char **out)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf) != 0)	// TODO: if j handling is changed in expand_dollar(), redo this
+			if (expand_dollar(s, &j, dynamic_buf, envp) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
-			continue ; // TODO: figure out if I want to somehow increment j here instead of inside expand_dollar
+			continue ;
 		}
 		if (append_char(dynamic_buf, s[j]) != 0)
 			return (dynamic_buf_free(dynamic_buf), -1);
@@ -447,9 +434,8 @@ int	parse_double_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* Parse an unquoted word, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
-int	parse_unquoted_word(const char *s, size_t *i, char **out)
+/* FIX ISSUE 2: Added char **envp parameter */
+int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -462,7 +448,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf) != 0)	// TODO: if j handling is changed in expand_dollar(), redo this
+			if (expand_dollar(s, &j, dynamic_buf, envp) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -525,39 +511,55 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	return (0);
 }
 
-/* Create a token out of an unquoted word or a quoted string. Parse the string
-depending on the presence and type of quotes; create a new token and return 0
-on success or -1 on failure. */
-int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail)
+/* FIX ISSUE 1+2: Coalescere segments + use envp for expansion */
+int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp)
 {
-	char	*txt;
-	int		status;
-	t_token	*token;
+	t_dynamic_buf	*buf;
+	bool			had_quote;
+	char			*segment;
+	t_token			*token;
 
-	txt = NULL;
-	if (line[*i] == '\'')
-		status = parse_single_quote(line, i, &txt);
-	else if (line[*i] == '"')
-		status = parse_double_quote(line, i, &txt);
-	else
-		status = parse_unquoted_word(line, i, &txt);
-	if (status != 0)
+	buf = dynbuf_create_and_init();
+	if (!buf)
 		return (-1);
-	token = new_token(TOKEN_WORD, txt);
-	if (!token)
-		return (free(txt), -1);
-	token->was_quoted = (line[*i] == '\'' || line[*i] == '"');
-	if (append_token(head, tail, token) != 0)
+	had_quote = false;
+	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])
+		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
-		free(token->text);
-		free(token);
-		return (-1);
+		segment = NULL;
+		if (line[*i] == '\'')
+		{
+			if (parse_single_quote(line, i, &segment) != 0)
+				return (dynamic_buf_free(buf), -1);
+			had_quote = true;
+		}
+		else if (line[*i] == '"')
+		{
+			if (parse_double_quote(line, i, &segment, envp) != 0)
+				return (dynamic_buf_free(buf), -1);
+			had_quote = true;
+		}
+		else
+		{
+			if (parse_unquoted_word(line, i, &segment, envp) != 0)
+				return (dynamic_buf_free(buf), -1);
+		}
+		if (append_str(buf, segment) != 0)
+			return (free(segment), dynamic_buf_free(buf), -1);
+		free(segment);
 	}
+	token = new_token(TOKEN_WORD, buf->buf);
+	if (!token)
+		return (dynamic_buf_free(buf), -1);
+	token->was_quoted = had_quote;
+	free(buf);
+	if (append_token(head, tail, token) != 0)
+		return (free(token->text), free(token), -1);
 	return (0);
 }
 
-/* Tokenize input line into linked token list */	// FIXME: too long; decide if it should deal with error handling (refactoring will heavily depend on this)
-t_token	*tokenize(const char *line, char **error)
+/* FIX ISSUE 2: Added char **envp parameter */
+t_token	*tokenize(const char *line, char **error, char **envp)
 {
 	t_token	*head;
 	t_token	*tail;
@@ -575,7 +577,7 @@ t_token	*tokenize(const char *line, char **error)
 			i++;
 			continue ;
 		}
-		if (c == '\\' || c == ';')						// TODO: double check; include any other ones?
+		if (c == '\\' || c == ';')
 		{
 			*error = strdup("Unsupported escape or special character");
 			free_tokens(head);
@@ -585,7 +587,7 @@ t_token	*tokenize(const char *line, char **error)
 		{
 			if (create_token_pipe(line, &i, &head, &tail) != 0)
 			{
-				*error = strdup("Out of memory");		// TODO: double check if this is true
+				*error = strdup("Out of memory");
 				free_tokens(head);
 				return (NULL);
 			}
@@ -595,7 +597,7 @@ t_token	*tokenize(const char *line, char **error)
 		{
 			if (create_token_redirection(line, &i, &head, &tail) != 0)
 			{
-				*error = strdup("Out of memory");		// TODO: double check if this is true
+				*error = strdup("Out of memory");
 				free_tokens(head);
 				return (NULL);
 			}
@@ -603,7 +605,7 @@ t_token	*tokenize(const char *line, char **error)
 		}
 		if (c == '\'' || c == '"' || is_word_char(c))
 		{
-			if (create_token_quote_or_word(line, &i, &head, &tail) != 0)
+			if (create_token_quote_or_word(line, &i, &head, &tail, envp) != 0)
 			{
 				*error = strdup("Parse error in word/quote");
 				free_tokens(head);
@@ -611,7 +613,6 @@ t_token	*tokenize(const char *line, char **error)
 			}
 			continue ;
 		}
-		// unknown char: should not happen; TODO: double check
 		i++;
 	}
 	return (head);
@@ -867,44 +868,42 @@ t_command	*parse_tokens_to_commands(t_token *t)
 /* =================== Top-level parse entrypoint =================== */		// NEW! entrypoint for all parsing; to be called from main()
 
 // FIXME: too long
-/* Top-level parse entrypoint: tokenize -> validate -> strip trailing pipe -> 
-build commands -> free tokens. Returns a heap-allocated t_parse_result; caller 
-must free result->error (if set) and result->commands, then free result. */
-int	parse(const char *line, t_parse_result *result)
+/* FIX ISSUE 2: Added char **envp parameter */
+int	parse(const char *line, t_parse_result *result, char **envp)
 {
 	t_token		*tokens;
 	char		*tok_err;
 
-	if (!result)		// TODO: figure out if it's even possible for this to happen
+	if (!result)
 		return (-1);
 	tokens = NULL;
 	tok_err = NULL;
-	tokens = tokenize(line, &tok_err);										// Step 1: tokenize
+	tokens = tokenize(line, &tok_err, envp);
 	if (!tokens)
 	{
 		if (tok_err)
 			result->error = tok_err;
 		else
-			result->error = strdup("Tokenization failed");					// TODO: switch to the ft_ version later
+			result->error = strdup("Tokenization failed");
 		return (0);
 	}
-	if (deal_with_pipes(&tokens, &tok_err, &result->incomplete_pipe) != 0)	// Step 2: handle pipes
+	if (deal_with_pipes(&tokens, &tok_err, &result->incomplete_pipe) != 0)
 	{
-		if (tok_err)		// deal_with_pipes sets tok_err for validation errors
+		if (tok_err)
 			result->error = tok_err;
 		else if (!result->error)
-			result->error = strdup("Syntax error in pipe usage");			// TODO: switch to the ft_ version later
+			result->error = strdup("Syntax error in pipe usage");
 		free_tokens(tokens);
 		return (0);
 	}
-	result->commands = parse_tokens_to_commands(tokens);					// Step 3: build commands from tokens
-	if (!result->commands && !result->incomplete_pipe)		// unsure if this allows just '|' as a valid command; TODO: check
+	result->commands = parse_tokens_to_commands(tokens);
+	if (!result->commands && !result->incomplete_pipe)
 	{
-		result->error = strdup("Syntax error building commands");			// TODO: switch to the ft_ version later
+		result->error = strdup("Syntax error building commands");
 		free_tokens(tokens);
 		return (0);
 	}
-	free_tokens(tokens);	// tokens are used up; commands now own argv and redirs
+	free_tokens(tokens);
 	return (0);
 }
 
