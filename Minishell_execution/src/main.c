@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/22 22:00:00 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 14:43:42 by antoniocoss      ###   ########.fr       */
+/*   Created: 2025/01/22 22:17:02 by acossari          #+#    #+#             */
+/*   Updated: 2025/10/23 15:13:13 by acossari         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,11 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+/**
+ * Initialize shell state
+ * @param envp: Environment variables from main
+ * @return Pointer to initialized t_shell, or NULL on failure
+ */
 static t_shell	*init_shell(char **envp)
 {
 	t_shell	*shell;
@@ -34,6 +39,10 @@ static t_shell	*init_shell(char **envp)
 	return (shell);
 }
 
+/** 
+ * Cleanup shell state and free memory
+ * @param shell: Pointer to t_shell to cleanup
+ */
 static void	cleanup_shell(t_shell *shell)
 {
 	int	i;
@@ -57,6 +66,11 @@ static void	cleanup_shell(t_shell *shell)
 	free(shell);
 }
 
+/** 
+ * Process a single input line: parse and execute
+ * @param line: Input line from readline
+ * @param shell: Shell state
+ */
 static void	process_line(char *line, t_shell *shell)
 {
 	t_parse_result	result;
@@ -88,6 +102,9 @@ static void	process_line(char *line, t_shell *shell)
 	free(line);
 }
 
+/**
+ * Main entry point for minishell
+ */
 int	main(int argc, char **argv, char **envp)
 {
 	t_shell	*shell;
