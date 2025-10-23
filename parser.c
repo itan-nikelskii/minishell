@@ -6,15 +6,15 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/23 09:53:16 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/23 13:55:00 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 // TODO:
 // 0. FIXME:
 // 		1. ctrl-\ is supposed to od nothing, but rn it gives a segfault
-// 		2. | echo hello (leading/trailing pipe) should (?) be an error, but rn it's not
-//		3. echo hello || echo world (multiple pipea should be an error, but rn it's not)
+// 		2. [FIXED] | echo hello (leading pipe should be an error, but rn it's not)
+//		3. [FIXED] echo hello || echo world (multiple pipes should be an error, but rn it's not)
 //      4. really not sure about parse_single/double/unquoted functions; double check the differences;
 //		   maybe create a central parse_ function and separate single/double/unquoted since all these
 //		   are using the same parameters and variables
@@ -87,6 +87,14 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
+/* Final parser result returned from parse() */
+typedef struct s_parse_result		// NEW! now supports multiple commands and a trailing pipe
+{
+	t_command	*commands;			/* built pipeline for execution (NULL if none or on error) */
+	char		*error;				/* non-NULL on error (caller frees); TODO: figure out if needed */
+	bool		incomplete_pipe;	/* true if input ended with a single trailing pipe */
+}	t_parse_result;
+
 /* A dynamic buffer struct to store buffer pointer, length, and cap. */
 typedef struct s_dynamic_buf
 {
@@ -126,6 +134,11 @@ int			create_token_pipe(const char *line, size_t *i, t_token **head, t_token **t
 int			create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail);
 int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail);
 
+/* deal with pipes */
+int			validate_pipes(t_token *tokens, char **error);							// NEW! checks leading/double pipes
+int			strip_trailing_pipe(t_token **tokens, bool *incomplete);				// NEW! remove single trailing pipe if present
+int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);		// NEW! combine the two functions above
+
 /* top-level tokenize & parse */
 t_token		*tokenize(const char *line, char **error);
 size_t		count_words_in_segment(t_token *t);
@@ -134,6 +147,9 @@ int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
 t_command	*init_t_command(t_token *token);
 t_command	*build_command_from_tokens(t_token **tp);
 t_command	*parse_tokens_to_commands(t_token *t);
+
+/* top-level parse entrypoint (use in main) */
+int			parse(const char *line, t_parse_result *result);
 
 /* cleanup */
 void		free_tokens(t_token *t);
@@ -596,6 +612,104 @@ t_token	*tokenize(const char *line, char **error)
 	return (head);
 }
 
+/* ===== Deal with pipes: validate, strip trailing pipe (if applicable) ===== */
+
+/* Validate pipe usage in the token list:
+	- reject a leading pipe (e.g. "| echo");
+	- reject consecutive pipes (e.g. "echo || echo" or "echo | | echo").
+On success, return 0; on error, return -1 and set the *error message. */
+int	validate_pipes(t_token *tokens, char **error)
+{
+	t_token *current;
+
+	if (tokens == NULL)
+		return (0);
+	if (tokens->type == TOKEN_PIPE)		// leading pipe case
+	{
+		*error = strdup("Syntax error: unexpected '|'");
+		return (-1);
+	}
+	current = tokens;
+	while (current)							// consecutive pipe (anywhere) case
+	{
+		if (current->type == TOKEN_PIPE && current->next && current->next->type == TOKEN_PIPE)
+		{
+			*error = strdup("Syntax error: unexpected '||'");
+			return (-1);
+		}
+		current = current->next;
+	}
+	return (0);
+}
+
+/* If the last token is a single pipe, unlink and free that token, set 
+*incomplete = true and return 0. If no trailing pipe found, set *incomplete 
+= false and return 0. Return -1 if either parameter was NULL. 
+
+NOTE on removing the single trailing pipe token from the list: a single trailing
+'|' means the user started a pipeline but didn't finish the right-hand command. 
+The parser reports this to the execution layer (via the incomplete flag) but 
+still returns the already-built command(s). Removing the trailing pipe token 
+prevents parse_tokens_to_commands() from attempting to treat an empty command
+after the pipe. After the execution layer prompts and gathers more input, the 
+combined input can be re-parsed. */
+int	strip_trailing_pipe(t_token **tokens, bool *incomplete)
+{
+	t_token *current;
+	t_token *previous;
+
+	*incomplete = false;
+	previous = NULL;
+	current = *tokens;
+	while (current && current->next)	// find last node
+	{
+		previous = current;
+		current = current->next;
+	}
+	if (current && current->type == TOKEN_PIPE)
+	{
+		*incomplete = true;		// single trailing pipe found -> unlink and free current
+		if (previous)				
+			previous->next = NULL;
+		else
+			*tokens = NULL;		// defensive; leading pipe should have been rejected earlier (TODO: double check)
+		free(current->text);
+		free(current);
+	}
+	return (0);
+}
+
+/* Check whether the token list contains any pipe tokens; if so, validate pipe
+syntax to reject leading/duplicate pipes and strip trailing pipe if applicable.
+Return 0 on success (validation passed or no pipes), -1 on error of failure. */
+int	deal_with_pipes(t_token **tokens, char **error, bool *incomplete)
+{
+	t_token	*current;
+	bool	has_pipe;
+
+	if (!tokens || !error || !incomplete)
+		return (-1);
+	if (*tokens == NULL)
+		return (0);
+	has_pipe = false;
+	current = *tokens;
+	while (current)			// scan for any pipe token first; skip pipe-related logic if none
+	{
+		if (current->type == TOKEN_PIPE)
+		{
+			has_pipe = true;
+			break ;
+		}
+		current = current->next;
+	}
+	if (!has_pipe)
+		return (0);
+	if (validate_pipes(*tokens, error) != 0)		// validate pipe usage (leading/double)
+		return (-1);
+	strip_trailing_pipe(tokens, incomplete);		// strip single trailing pipe if present and set incomplete flag
+	return (0);
+}
+
 /* ===== Parser: convert tokens into commands with argv and redirections ===== */
 
 /* Count words until a pipe or end of command segment; return count. */
@@ -707,7 +821,10 @@ t_command	*build_command_from_tokens(t_token **tp)
 	return (cmd);
 }
 
-/* Parse token list into pipeline (linked commands) */		// FIXME: too long
+// FIXME: too long
+/* Parse token list into pipeline (linked commands). Set incomplete_pipe = true 
+if the token list ends with a single trailing pipe (the execution layer checks
+the flag to get more input). */
 t_command	*parse_tokens_to_commands(t_token *t)
 {
 	t_command	*head;
@@ -740,6 +857,50 @@ t_command	*parse_tokens_to_commands(t_token *t)
 			t = t->next;
 	}
 	return (head);
+}
+
+/* =================== Top-level parse entrypoint =================== */		// NEW! entrypoint for all parsing; to be called from main()
+
+// FIXME: too long
+/* Top-level parse entrypoint: tokenize -> validate -> strip trailing pipe -> 
+build commands -> free tokens. Returns a heap-allocated t_parse_result; caller 
+must free result->error (if set) and result->commands, then free result. */
+int	parse(const char *line, t_parse_result *result)
+{
+	t_token		*tokens;
+	char		*tok_err;
+
+	if (!result)		// TODO: figure out if it's even possible for this to happen
+		return (-1);
+	tokens = NULL;
+	tok_err = NULL;
+	tokens = tokenize(line, &tok_err);										// Step 1: tokenize
+	if (!tokens)
+	{
+		if (tok_err)
+			result->error = tok_err;
+		else
+			result->error = strdup("Tokenization failed");					// TODO: switch to the ft_ version later
+		return (0);
+	}
+	if (deal_with_pipes(&tokens, &tok_err, &result->incomplete_pipe) != 0)	// Step 2: handle pipes
+	{
+		if (tok_err)		// deal_with_pipes sets tok_err for validation errors
+			result->error = tok_err;
+		else if (!result->error)
+			result->error = strdup("Syntax error in pipe usage");			// TODO: switch to the ft_ version later
+		free_tokens(tokens);
+		return (0);
+	}
+	result->commands = parse_tokens_to_commands(tokens);					// Step 3: build commands from tokens
+	if (!result->commands && !result->incomplete_pipe)		// unsure if this allows just '|' as a valid command; TODO: check
+	{
+		result->error = strdup("Syntax error building commands");			// TODO: switch to the ft_ version later
+		free_tokens(tokens);
+		return (0);
+	}
+	free_tokens(tokens);	// tokens are used up; commands now own argv and redirs
+	return (0);
 }
 
 /* ========================= Cleanup helpers ========================= */
@@ -860,10 +1021,10 @@ static void	print_commands(t_command *cmds)
 int	main(void)
 {
 	char				*line;
-	char				*error;
 	t_token				*tokens;
 	t_command			*cmds;
 	struct sigaction	sa;				// TODO: figure this out
+	t_parse_result		result;			// NEW! the final parsin result is stored here (use for execution)
 
 	memset(&sa, 0, sizeof(sa));
 	sa.sa_handler = sigint_handler;
@@ -880,32 +1041,31 @@ int	main(void)
 		{
 			add_history(line);
 		}
-		error = NULL;
-		tokens = tokenize(line, &error);
-		if (tokens == NULL)
-		{
-			if (error)
-			{
-				fprintf(stderr, "Parse error: %s\n", error);
-				free(error);
-			}
-			else
-			{
-				fprintf(stderr, "Unknown parse error\n");
-			}
-			free(line);
-			continue ;
-		}
-		cmds = parse_tokens_to_commands(tokens);
-		if (cmds == NULL)
-		{
-			fprintf(stderr, "Syntax error building commands\n");
-			free_tokens(tokens);
-			free(line);
-			continue ;
-		}
+		result.commands = NULL;
+        result.error = NULL;
+        result.incomplete_pipe = false;
+		if (parse(line, &result) != 0)
+        {
+            fprintf(stderr, "Internal parse error\n");
+            free(line);
+            continue ;
+        }
+		if (result.error)
+        {
+            fprintf(stderr, "Parse error: %s\n", result.error);
+            free(result.error);
+            free(line);
+            continue ;
+        }
+		if (result.incomplete_pipe)
+        {	// execution layer should prompt for continuation; for now just notify and cleanup:
+            fprintf(stderr, "Input ends with trailing pipe (need continuation)\n");
+            free_commands(result.commands);
+            free(line);
+            continue ;
+        }
+		cmds = result.commands;
 		print_commands(cmds);
-		free_tokens(tokens);
 		free_commands(cmds);
 		free(line);
 		g_signal_received = 0;	// TODO: figure out
