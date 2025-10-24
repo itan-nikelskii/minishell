@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/23 14:43:37 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/24 13:01:29 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -274,7 +274,7 @@ t_dynamic_buf	*dynbuf_create_and_init(void)
 /* FIX ISSUE 4: Get exit status from shell instead of hardcoded "0" */
 char	*get_exit_status_str(t_shell *shell)
 {
-	char	buffer[12];
+	char	buffer[12];							// FIXME: magic numbers (why 12?)
 	int		n;
 	int		len;
 	int		i;
@@ -303,7 +303,7 @@ char	*get_exit_status_str(t_shell *shell)
 		}
 	}
 	buffer[len] = '\0';
-	return (strdup(buffer));
+	return (strdup(buffer));					// TODO: turn into ft_ version
 }
 
 /* Ensure buffer capacity for 'need' amount of bytes and grow the buffer with
@@ -378,9 +378,9 @@ char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 		return (NULL);
 	value = get_env_value(name, envp);
 	if (value)
-		result = strdup(value);
+		result = strdup(value);				// TODO: switch to the ft_ version later
 	else
-		result = strdup("");
+		result = strdup("");				// TODO: switch to the ft_ version later
 	free(name);
 	*j = index;
 	return (result);
@@ -400,7 +400,7 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_s
 			return (-1);
 		*j = index + 1;
 	}
-	else if (isalpha((unsigned char)s[index]) || s[index] == '_')
+	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
 	{
 		expanded = expand_variable(s, index, j, envp);
 		if (!expanded)
@@ -498,17 +498,15 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_she
 
 /* Handle the '|' char: create a new pipe token, append it to the token list,
 and return 0 on success or -1 on failure. */
-int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail)
+int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail)			// FIXME: *line doesn't seem to be used anymore; delete?
 {
 	t_token	*token;
 
 	// EDITED: Added (void)line to suppress unused parameter warning with -Werror
 	(void)line;
 	token = new_token(TOKEN_PIPE, strdup("|"));
-	if (!token)
+	if (!token || append_token(head, tail, token) != 0)
 		return (-1);
-	if (append_token(head, tail, token) != 0)
-		return (free(token), -1);
 	*i = *i + 1;
 	return (0);
 }
@@ -528,9 +526,11 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 		else
 			token = new_token(TOKEN_REDIR_IN, strdup("<"));			// TODO: switch to the ft_ version later
 	}
-	else if (line[*i] == '>')
+	else 	// if (line[*i] == '>')
 	{
-		if (line[*i + 1] && line[*i + 1] == '>')
+		if (line[*i + 1] && line[*i + 1] == '<')					// NEW: the >< case error
+			return (-2);
+		else if (line[*i + 1] && line[*i + 1] == '>')
 			token = new_token(TOKEN_REDIR_APPEND, strdup(">>"));	// TODO: switch to the ft_ version later
 		else
 			token = new_token(TOKEN_REDIR_OUT, strdup(">"));		// TODO: switch to the ft_ version later
@@ -539,9 +539,7 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 		*i += 2;
 	else
 		*i += 1;
-	if (!token)
-		return (-1);
-	if (append_token(head, tail, token) != 0)
+	if (!token || append_token(head, tail, token) != 0)
 		return (-1);
 	return (0);
 }
@@ -558,7 +556,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	if (!buf)
 		return (-1);
 	had_quote = false;
-	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])
+	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])			// TODO: turn into ft_ version
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;
@@ -601,6 +599,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 	t_token	*tail;
 	size_t	i;
 	char	c;
+	int		ret_value;
 
 	head = NULL;
 	tail = NULL;
@@ -608,14 +607,14 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 	while (line[i] != '\0')
 	{
 		c = line[i];
-		if (isspace((unsigned char)c))
+		if (isspace((unsigned char)c))									// TODO: switch to the ft_ version later
 		{
 			i++;
 			continue ;
 		}
 		if (c == '\\' || c == ';')
 		{
-			*error = strdup("Unsupported escape or special character");
+			*error = strdup("Unsupported escape or special character");	// TODO: switch to the ft_ version later
 			free_tokens(head);
 			return (NULL);
 		}
@@ -623,7 +622,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		{
 			if (create_token_pipe(line, &i, &head, &tail) != 0)
 			{
-				*error = strdup("Out of memory");
+				*error = strdup("malloc failure");						// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -631,9 +630,13 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '<' || c == '>')
 		{
-			if (create_token_redirection(line, &i, &head, &tail) != 0)
+			ret_value = create_token_redirection(line, &i, &head, &tail);	// NEW! differentiating between two error cases for this func
+			if (ret_value != 0)
 			{
-				*error = strdup("Out of memory");
+				if (ret_value == -1)
+					*error = strdup("malloc failure");					// TODO: switch to the ft_ version later
+				else
+					*error = strdup("Syntax error near unexpected token '<'");	// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -643,7 +646,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		{
 			if (create_token_quote_or_word(line, &i, &head, &tail, shell->envp, shell) != 0)
 			{
-				*error = strdup("Parse error in word/quote");
+				*error = strdup("Parse error in word/quote");			// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -795,7 +798,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 	token = token->next;	// advance to skip the actual redirection token and get to target
 	if (token->type != TOKEN_WORD)
 		return (-1);
-	target = strdup(token->text);
+	target = strdup(token->text);								// TODO: turn into ft_ version
 	if (!target)
 		return (-1);
 	redir = new_redir(redir_type, target, token->was_quoted);
@@ -811,7 +814,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 		cmd->redirs = redir;
 	else
 	{
-		t_redir *last = cmd->redirs;
+		t_redir *last = cmd->redirs;						// FIXME: variable declaration should be on top
 		while (last->next)
 			last = last->next;
 		last->next = redir;
@@ -926,12 +929,10 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 	tokens = NULL;
 	tok_err = NULL;
 	tokens = tokenize(line, &tok_err, shell);
-	if (!tokens)
+	if (!tokens)										// NEW! whitespace doesn't produce tok_err -> ignored like in bash
 	{
 		if (tok_err)
 			result->error = tok_err;
-		else
-			result->error = strdup("Tokenization failed");
 		return (0);
 	}
 	if (deal_with_pipes(&tokens, &tok_err, &result->incomplete_pipe) != 0)
@@ -939,14 +940,14 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		if (tok_err)
 			result->error = tok_err;
 		else if (!result->error)
-			result->error = strdup("Syntax error in pipe usage");
+			result->error = strdup("Syntax error in pipe usage");				// TODO: switch to the ft_ version later; check if this line gets executed ever
 		free_tokens(tokens);
 		return (0);
 	}
 	result->commands = parse_tokens_to_commands(tokens);
-	if (!result->commands && !result->incomplete_pipe)
+	if (!result->commands)
 	{
-		result->error = strdup("Syntax error building commands");
+		result->error = strdup("Syntax error building commands");				// TODO: switch to the ft_ version later
 		free_tokens(tokens);
 		return (0);
 	}

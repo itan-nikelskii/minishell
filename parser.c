@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/23 13:55:00 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/24 08:52:25 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -474,7 +474,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out)
 
 /* Handle the '|' char: create a new pipe token, append it to the token list,
 and return 0 on success or -1 on failure. */
-int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail)
+int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail)		// FIXME: line doesn't seem to be needed anywhere?
 {
 	t_token	*token;
 
@@ -893,7 +893,7 @@ int	parse(const char *line, t_parse_result *result)
 		return (0);
 	}
 	result->commands = parse_tokens_to_commands(tokens);					// Step 3: build commands from tokens
-	if (!result->commands && !result->incomplete_pipe)		// unsure if this allows just '|' as a valid command; TODO: check
+	if (!result->commands)
 	{
 		result->error = strdup("Syntax error building commands");			// TODO: switch to the ft_ version later
 		free_tokens(tokens);
