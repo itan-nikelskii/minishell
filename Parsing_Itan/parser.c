@@ -158,8 +158,9 @@ size_t		count_words_in_segment(t_token *t);
 int			consume_redirection_target(t_token *token, t_command *cmd);
 int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
 t_command	*init_t_command(t_token *token);
-t_command	*build_command_from_tokens(t_token **tp);
-t_command	*parse_tokens_to_commands(t_token *t);
+/* FIX ISSUE 7: Added char **error parameter for specific error messages */
+t_command	*build_command_from_tokens(t_token **tp, char **error);
+t_command	*parse_tokens_to_commands(t_token *t, char **error);
 
 /* top-level parse entrypoint (use in main) */
 /* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
@@ -847,7 +848,8 @@ t_command *init_t_command(t_token *token)
 /* Build a single command from tokens up to pipe; differentiate between
 words and redirections with their targets; return the built command
 on success, or NULL on failure. */
-t_command	*build_command_from_tokens(t_token **tp)
+/* FIX ISSUE 7: Added char **error parameter for specific error messages */
+t_command	*build_command_from_tokens(t_token **tp, char **error)
 {
 	t_token		*token;
 	t_command	*cmd;
@@ -865,6 +867,13 @@ t_command	*build_command_from_tokens(t_token **tp)
 		}
 		else // must be a redirection token
 		{
+			/* FIX ISSUE 7: Check if redirection target is missing */
+			if (!token->next || token->next->type != TOKEN_WORD)
+			{
+				if (error)
+					*error = strdup("syntax error near unexpected token `newline'");
+				return (NULL);
+			}
 			if (consume_redirection_target(token, cmd) != 0)
 				return (NULL);
 			token = token->next;	// skip the target of redirection
@@ -877,10 +886,11 @@ t_command	*build_command_from_tokens(t_token **tp)
 }
 
 // FIXME: too long
-/* Parse token list into pipeline (linked commands). Set incomplete_pipe = true 
+/* Parse token list into pipeline (linked commands). Set incomplete_pipe = true
 if the token list ends with a single trailing pipe (the execution layer checks
 the flag to get more input). */
-t_command	*parse_tokens_to_commands(t_token *t)
+/* FIX ISSUE 7: Added char **error parameter for specific error messages */
+t_command	*parse_tokens_to_commands(t_token *t, char **error)
 {
 	t_command	*head;
 	t_command	*tail;
@@ -895,7 +905,7 @@ t_command	*parse_tokens_to_commands(t_token *t)
 			t = t->next;
 			continue ;
 		}
-		cmd = build_command_from_tokens(&t);
+		cmd = build_command_from_tokens(&t, error);
 		if (!cmd)
 			return (NULL);
 		if (head == NULL)
@@ -944,10 +954,14 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		free_tokens(tokens);
 		return (0);
 	}
-	result->commands = parse_tokens_to_commands(tokens);
-	if (!result->commands)
+	result->commands = parse_tokens_to_commands(tokens, &tok_err);
+	if (!result->commands && !result->incomplete_pipe)
 	{
-		result->error = strdup("Syntax error building commands");				// TODO: switch to the ft_ version later
+		/* FIX ISSUE 7: Use specific error if set, otherwise generic */
+		if (tok_err)
+			result->error = tok_err;
+		else
+			result->error = strdup("Syntax error building commands");				// TODO: switch to the ft_ version later
 		free_tokens(tokens);
 		return (0);
 	}

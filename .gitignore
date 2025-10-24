@@ -1,2 +1,33 @@
+# macOS
 .DS_Store
-**/.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE / editor
+.vscode/
+.idea/
+*.code-workspace
+*.swp
+*.swo
+
+# Build artefacts
+*.o
+*.a
+*.so
+*.dylib
+*.out
+*.exe
+*.gch
+*.dSYM/
+build/
+obj/
+bin/
+
+# Coverage / profiling
+*.gcda
+*.gcno
+*.gcov
+gmon.out
+
+# Progetto
+minishell

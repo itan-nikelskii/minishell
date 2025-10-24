@@ -25,13 +25,14 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 
 	if (!cmd->argv[0] || !*cmd->argv[0])
 	{
-		ft_putstr_fd("minishell: command not found\n", STDERR_FILENO);
+		ft_putstr_fd("command not found\n", STDERR_FILENO);
 		exit(CMD_NOT_FOUND);
 	}
 	path = resolve_path(cmd->argv[0], shell->envp);
 	if (!path)
 	{
-		print_error(cmd->argv[0], "command not found");
+		ft_putstr_fd(cmd->argv[0], STDERR_FILENO);
+		ft_putstr_fd(": command not found\n", STDERR_FILENO);
 		exit(CMD_NOT_FOUND);
 	}
 	execve(path, cmd->argv, shell->envp);

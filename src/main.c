@@ -65,18 +65,64 @@ static void	cleanup_shell(t_shell *shell)
 }
 
 /**
- * Handle parse errors
+ * Handle parse errors (FIX ISSUE 7: set exit status to 2)
  * @param result: Parse result with error message
  * @param line: Input line to free
+ * @param shell: Shell state (for setting exit status)
  */
-static void	handle_parse_error(t_parse_result *result, char *line)
+static void	handle_parse_error(t_parse_result *result, char *line,
+		t_shell *shell)
 {
 	if (result->error)
 	{
 		print_error(NULL, result->error);
 		free(result->error);
 	}
+	shell->last_exit_status = 2;
 	free(line);
+}
+
+/**
+ * Handle continuation prompt for incomplete pipe (FIX ISSUE 6)
+ * @param line: Initial line with trailing pipe
+ * @param shell: Shell state
+ * @return Complete line or NULL if Ctrl+D or Ctrl+C
+ */
+static char	*handle_continuation(char *line, t_shell *shell)
+{
+	char	*continuation;
+	char	*complete;
+	char	*tmp;
+
+	while (1)
+	{
+		continuation = readline("> ");
+		if (g_signal_received == SIGINT)
+		{
+			shell->last_exit_status = 130;
+			free(line);
+			if (continuation)
+				free(continuation);
+			return (NULL);
+		}
+		if (!continuation)
+		{
+			shell->last_exit_status = 2;
+			print_error(NULL, "syntax error: unexpected end of file");
+			free(line);
+			return (NULL);
+		}
+		tmp = ft_strjoin(line, "\n");
+		free(line);
+		if (!tmp)
+			return (free(continuation), NULL);
+		complete = ft_strjoin(tmp, continuation);
+		free(tmp);
+		free(continuation);
+		if (!complete)
+			return (NULL);
+		return (complete);
+	}
 }
 
 /**
@@ -97,7 +143,14 @@ static void	process_line(char *line, t_shell *shell)
 	if (parse(line, &result, shell) != 0)
 		return (print_error(NULL, "internal parse error"), free(line));
 	if (result.error)
-		return (handle_parse_error(&result, line));
+		return (handle_parse_error(&result, line, shell));
+	if (result.incomplete_pipe)
+	{
+		line = handle_continuation(line, shell);
+		if (!line)
+			return ;
+		return (process_line(line, shell));
+	}
 	if (result.commands)
 	{
 		execute_command(result.commands, shell);
