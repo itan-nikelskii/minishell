@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/24 13:01:29 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/24 16:06:23 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,36 +50,46 @@
 - static because the norm requires it. */
 static volatile sig_atomic_t	g_signal_received = 0;
 
-/* Token types */
+/* Token types: pipe = |, in = <, out = >, apend = >>, heredoc = << */
 typedef enum e_token_type 
 {
 	TOKEN_WORD,
-	TOKEN_PIPE,			// |
-	TOKEN_REDIR_IN,		// <
-	TOKEN_REDIR_OUT,	// >
-	TOKEN_REDIR_APPEND,	// >>
-	TOKEN_HEREDOC		// <<
+	TOKEN_PIPE,
+	TOKEN_REDIR_IN,
+	TOKEN_REDIR_OUT,
+	TOKEN_REDIR_APPEND,
+	TOKEN_HEREDOC
 }	t_token_type;
 
-/* Token structure */
+/* Token structure:
+ * type = type of token
+ * text = token as a string
+ * was_quoted = flag for HEREDOC expansion control (only expand w/o quotes)
+ * next = pointer to the next t_token node */
 typedef struct s_token
 {
 	t_token_type	type;
 	char			*text;
-	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
+	bool			was_quoted;
 	struct s_token	*next;
 }	t_token;
 
-/* Redirection entry */		// TODO: document properly
+/* Redirection entry:
+ * type = type of redirection token
+ * target = filename (or heredoc delimiter) string
+ * was_quoted = flag for HEREDOC expansion control (only expand w/o quotes) */
 typedef struct s_redir
 {
-	t_token_type	type;		// type of redirection token
-	char			*target;	// filename (or heredoc delimiter) string
-	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
+	t_token_type	type;
+	char			*target;
+	bool			was_quoted;
 	struct s_redir	*next;
 }	t_redir;
 
-/* Command node (in a pipeline) */
+/* Command node (in a pipeline):
+ * argv = array of commands as strings
+ * redirs = pointer to a redirection node
+ * next = pointer to the next t_command node */
 typedef struct s_command
 {
 	char				**argv;
@@ -87,12 +97,15 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
-/* Final parser result returned from parse() */
-typedef struct s_parse_result		// NEW! now supports multiple commands and a trailing pipe
+/* Final parser result returned from parse():
+ * commands = pointer to commands ready for execution (NULL if none or on error)
+ * error = non-NULL on error (caller frees)
+ * incomplete_pipe = true if input ended with a single trailing pipe */
+typedef struct s_parse_result
 {
-	t_command	*commands;			/* built pipeline for execution (NULL if none or on error) */
-	char		*error;				/* non-NULL on error (caller frees); TODO: figure out if needed */
-	bool		incomplete_pipe;	/* true if input ended with a single trailing pipe */
+	t_command	*commands;
+	char		*error;
+	bool		incomplete_pipe;
 }	t_parse_result;
 
 /* A dynamic buffer struct to store buffer pointer, length, and cap. */
@@ -113,7 +126,7 @@ t_token		*new_token(t_token_type type, char *text);
 int			append_token(t_token **head, t_token **tail, t_token *node);
 t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 
-/* FIX ISSUE 4: Shell struct definition (minimal, matches minishell.h) */
+/* Shell struct definition; TODO: figure out what's what and document */
 typedef struct s_shell
 {
 	char	**envp;
@@ -124,9 +137,9 @@ typedef struct s_shell
 }	t_shell;
 
 /* env helpers */
-// FIX ISSUE 2: Using executor's get_env_value() instead
+// Using executor's get_env_value() instead
 extern char	*get_env_value(char *key, char **envp);
-// FIX ISSUE 4: Now can access shell->last_exit_status
+// Now can access shell->last_exit_status
 char		*get_exit_status_str(t_shell *shell);
 
 /* buffer/expansion helpers */
@@ -137,33 +150,30 @@ char		*expand_variable(const char *s, size_t index, size_t *j, char **envp);
 
 /* parse small parts */
 int			parse_single_quote(const char *s, size_t *i, char **out);
-int			parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
-int			parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
-int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh);
+int			parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell);
+int			parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell);
+int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, t_shell *shell);
 
 /* tokenize helpers */
 int			create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail);
 int			create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail);
-int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell);
+int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, t_shell *shell);
 
 /* deal with pipes */
-int			validate_pipes(t_token *tokens, char **error);							// NEW! checks leading/double pipes
-int			strip_trailing_pipe(t_token **tokens, bool *incomplete);				// NEW! remove single trailing pipe if present
-int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);		// NEW! combine the two functions above
+int			validate_pipes(t_token *tokens, char **error);
+int			strip_trailing_pipe(t_token **tokens, bool *incomplete);
+int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);
 
 /* top-level tokenize & parse */
-/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 t_token		*tokenize(const char *line, char **error, t_shell *shell);
 size_t		count_words_in_segment(t_token *t);
 int			consume_redirection_target(t_token *token, t_command *cmd);
 int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
 t_command	*init_t_command(t_token *token);
-/* FIX ISSUE 7: Added char **error parameter for specific error messages */
-t_command	*build_command_from_tokens(t_token **tp, char **error);
-t_command	*parse_tokens_to_commands(t_token *t, char **error);
+t_command	*build_command_from_tokens(t_token **tp, char **error);			// NEW! (for Itan) TODO: check it out
+t_command	*parse_tokens_to_commands(t_token *t, char **error);			// NEW! (for Itan) TODO: check it out
 
 /* top-level parse entrypoint (use in main) */
-/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 int			parse(const char *line, t_parse_result *result, t_shell *shell);
 
 /* cleanup */
@@ -270,12 +280,13 @@ t_dynamic_buf	*dynbuf_create_and_init(void)
 
 /* ====================== Variable expansion helpers ====================== */
 
-// FIX ISSUE 2: Removed parser_get_env_value() - using executor's get_env_value() instead
-
-/* FIX ISSUE 4: Get exit status from shell instead of hardcoded "0" */
+/* TODO: documentation (buffer[12] because an int in C is typically 32 bits => 
+can hold up to 2,147,483,647 (10 digits + sign + \0); ^= is bitwise XOR to
+reverse the characters in buffer because the digits were built backwards during
+the division loop) */
 char	*get_exit_status_str(t_shell *shell)
 {
-	char	buffer[12];							// FIXME: magic numbers (why 12?)
+	char	buffer[12];
 	int		n;
 	int		len;
 	int		i;
@@ -363,7 +374,7 @@ int	append_str(t_dynamic_buf *dynamic_buf, const char *s)
 	return (0);
 }
 
-/* FIX ISSUE 2: Added char **envp parameter to use executor's get_env_value() */
+/* TODO: documentation */
 char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 {
 	size_t	name_start;
@@ -387,8 +398,8 @@ char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 	return (result);
 }
 
-/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
-int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh)
+/* TODO: documentation (after proper refactoring for norminette) */
+int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, t_shell *shell)
 {
 	size_t	index;
 	char	*expanded;
@@ -396,14 +407,14 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_s
 	index = *j + 1;
 	if (s[index] == '?')
 	{
-		expanded = get_exit_status_str(sh);
+		expanded = get_exit_status_str(shell);
 		if (!expanded)
 			return (-1);
 		*j = index + 1;
 	}
 	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
 	{
-		expanded = expand_variable(s, index, j, envp);
+		expanded = expand_variable(s, index, j, shell->envp);
 		if (!expanded)
 			return (-1);
 	}
@@ -441,8 +452,9 @@ int	parse_single_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
-int	parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
+/* Parse double-quoted string, allowing for $ expansion, and store it in *out;
+return 0 on sucess, -1 if something went wrong. */
+int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -455,7 +467,7 @@ int	parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shel
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -470,8 +482,9 @@ int	parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shel
 	return (0);
 }
 
-/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
-int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
+/* Parse an unquoted word, allowing for $ expansion, and store it in *out;
+return 0 on sucess, -1 if something went wrong. */
+int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -484,7 +497,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_she
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -545,8 +558,11 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	return (0);
 }
 
-/* FIX ISSUE 1+2+4: Coalescere segments + use envp and shell for expansion */
-int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell)
+/* Create a token out of an unquoted word or a quoted string. Parse the string
+depending on the presence and type of quotes; create a new token and return 0
+on success or -1 on failure. */
+/* TODO: document new addition: Coalescere segments + use envp and shell for expansion */
+int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, t_shell *shell)
 {
 	t_dynamic_buf	*buf;
 	bool			had_quote;
@@ -557,7 +573,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	if (!buf)
 		return (-1);
 	had_quote = false;
-	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])			// TODO: turn into ft_ version
+	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])			// TODO: turn into ft_ version; TODO: duble check the logic
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;
@@ -569,13 +585,13 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 		}
 		else if (line[*i] == '"')
 		{
-			if (parse_double_quote(line, i, &segment, envp, shell) != 0)
+			if (parse_double_quote(line, i, &segment, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 			had_quote = true;
 		}
 		else
 		{
-			if (parse_unquoted_word(line, i, &segment, envp, shell) != 0)
+			if (parse_unquoted_word(line, i, &segment, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 		}
 		if (append_str(buf, segment) != 0)
@@ -592,8 +608,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	return (0);
 }
 
-/* FIX ISSUE 2: Added char **envp parameter */
-/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
+/* Tokenize input line into linked token list */		// FIXME: too long; decide if it should deal with error handling (refactoring will heavily depend on this)
 t_token	*tokenize(const char *line, char **error, t_shell *shell)
 {
 	t_token	*head;
@@ -645,7 +660,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '\'' || c == '"' || is_word_char(c))
 		{
-			if (create_token_quote_or_word(line, &i, &head, &tail, shell->envp, shell) != 0)
+			if (create_token_quote_or_word(line, &i, &head, &tail, shell) != 0)
 			{
 				*error = strdup("Parse error in word/quote");			// TODO: switch to the ft_ version later
 				free_tokens(head);
@@ -808,7 +823,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 		free(target);
 		return (-1);
 	}
-	// FIX ISSUE 3: Append to end instead of prepend to head
+	// FIX: Append to end instead of prepend to head
 	// Old: prepend created reversed list (last-typed processed first)
 	// New: append maintains correct order (last-typed processed last)
 	if (!cmd->redirs)
@@ -924,9 +939,9 @@ t_command	*parse_tokens_to_commands(t_token *t, char **error)
 	return (head);
 }
 
-/* =================== Top-level parse entrypoint =================== */		// NEW! entrypoint for all parsing; to be called from main()
+/* =================== Top-level parse entrypoint =================== */
 
-// FIXME: too long
+// FIXME: too long; TODO: documentation
 /* FIX ISSUE 2: Added char **envp parameter */
 /* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 int	parse(const char *line, t_parse_result *result, t_shell *shell)
@@ -1134,7 +1149,7 @@ void	sigint_handler(int sig)
 // 		print_commands(cmds);
 // 		free_commands(cmds);
 // 		free(line);
-// 		g_signal_received = 0;	// TODO: figure out
+// 		g_signal_received = 0;
 // 	}
 // 	return (0);
 // }
