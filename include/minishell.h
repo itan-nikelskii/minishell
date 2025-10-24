@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 14:43:35 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/24 20:03:09 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -86,10 +86,12 @@ typedef struct s_cmd
 typedef struct s_shell
 {
 	char	**envp;
-	char	**xenv; /* exported names without value (only keys) */
+	char	**xenv;
 	int		last_exit_status;
 	int		stdin_backup;
 	int		stdout_backup;
+	bool	interactive;
+	bool	in_child;
 }	t_shell;
 
 /* Multi-pipe execution context */

@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:42:33 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/24 21:12:37 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,10 +37,7 @@ int	execute_external(t_command *cmd, t_shell *shell)
 	}
 	if (pid == 0)
 		exec_child_single(cmd, shell);
-	if (waitpid(pid, &status, 0) == -1)
-	{
-		print_perror("waitpid", NULL);
-		return (EXIT_FAILURE);
-	}
+	while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+		continue ;
 	return (get_child_exit_status(status));
 }

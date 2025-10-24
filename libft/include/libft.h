@@ -162,6 +162,7 @@ typedef struct s_buffer
 
 /* Main get_next_line function */
 char	*ft_get_next_line(int fd);
+void	ft_gnl_clear(int fd);
 
 /* get_next_line utility functions */
 int		init_stash(t_buffer *buf);

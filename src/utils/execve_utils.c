@@ -58,6 +58,7 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 	int	out_fd;
 
 	reset_signals();
+	shell->in_child = true;
 	in_fd = STDIN_FILENO;
 	out_fd = STDOUT_FILENO;
 	if (cmd->redirs)
