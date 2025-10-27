@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 09:22:41 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 20:00:36 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/27 13:57:22 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,41 +30,77 @@ static int	create_temp_file(char *filepath)
 }
 
 /**
- * Reads lines from stdin until delimiter or signal
- * Expands $VAR and $? if expand flag is true
+ * Child process: reads heredoc lines and writes to FD
+ * Exits with 0 on success, 130 on SIGINT, 1 on error
  * @param fd_write: File descriptor to write heredoc content
  * @param delimiter: String that ends the heredoc input
  * @param shell: Shell state for expansions
  * @param expand: If true, expand variables; if false, keep literal
- * @return 0 on success, -1 on SIGINT
  */
-static int	read_heredoc_lines(int fd_write, char *delimiter,
+static void	heredoc_child_process(int fd_write, char *delimiter,
 								t_shell *shell, bool expand)
 {
 	char	*line;
 	char	*expanded;
 
+	setup_child_ps2_signals();
 	while (1)
 	{
 		line = readline("> ");
-		if (g_signal_received == SIGINT)
-			return (free(line), -1);
 		if (!line)
-			return (0);
+			(close(fd_write), exit(130));
 		if (ft_strcmp(line, delimiter) == 0)
-			return (free(line), 0);
+			(free(line), close(fd_write), exit(0));
 		expanded = hd_expand_line(line, shell, expand);
-		free(line);
 		if (!expanded)
-			return (-1);
+			(free(line), close(fd_write), exit(1));
 		write(fd_write, expanded, ft_strlen(expanded));
 		write(fd_write, "\n", 1);
-		free(expanded);
+		(free(line), free(expanded));
 	}
 }
 
 /**
- * Handles heredoc input and returns read fd
+ * Handle child process exit and return status
+ * @param pid: PID of the child process
+ * @param shell: Shell state for updating last_exit_status
+ * @return 0 on success, -1 on error, 130 on SIGINT
+ */
+static int	handle_child_exit(pid_t pid, t_shell *shell)
+{
+	int	status;
+
+	while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
+		continue ;
+	if (WIFEXITED(status) && WEXITSTATUS(status) == 130)
+		return (shell->last_exit_status = 130, 130);
+	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+		return (-1);
+	return (0);
+}
+
+/**
+ * Cleanup and open file for reading
+ * @param filepath: Path to the heredoc temp file
+ * @param child_status: Exit status of the heredoc child process
+ * @return File descriptor to read heredoc content, -1 on error, -130 on
+ */
+static int	finalize_heredoc(char *filepath, int child_status)
+{
+	int	fd_read;
+
+	if (child_status == 130)
+		return (unlink(filepath), -130);
+	if (child_status != 0)
+		return (unlink(filepath), -1);
+	fd_read = open(filepath, O_RDONLY);
+	if (fd_read == -1)
+		return (print_perror("heredoc", "open read"), unlink(filepath), -1);
+	return (unlink(filepath), fd_read);
+}
+
+/**
+ * Handles heredoc input using child helper process
  * @param delimiter: String that ends the heredoc input
  * @param shell: Shell state for expansions
  * @param expand: If true, expand $VAR and $?; if false, keep literal
@@ -74,25 +110,21 @@ int	process_heredoc(char *delimiter, t_shell *shell, bool expand)
 {
 	char	filepath[HD_PATH_BUFSZ];
 	int		fd_write;
-	int		fd_read;
+	pid_t	pid;
+	int		child_status;
 
-	setup_heredoc_signals();
-	g_signal_received = 0;
 	fd_write = create_temp_file(filepath);
 	if (fd_write == -1)
-		return (setup_prompt_signals(), -1);
-	if (read_heredoc_lines(fd_write, delimiter, shell, expand) == -1)
-		return (cleanup_heredoc(fd_write, filepath, NULL),
-			setup_prompt_signals(), -1);
+		return (-1);
+	setup_parent_wait_signals();
+	pid = fork();
+	if (pid == -1)
+		return (setup_parent_ps1_signals(),
+			close(fd_write), unlink(filepath), -1);
+	if (pid == 0)
+		heredoc_child_process(fd_write, delimiter, shell, expand);
 	close(fd_write);
-	fd_read = open(filepath, O_RDONLY);
-	if (fd_read == -1)
-	{
-		print_perror("heredoc", "open read");
-		unlink(filepath);
-		return (setup_prompt_signals(), -1);
-	}
-	unlink(filepath);
-	setup_prompt_signals();
-	return (fd_read);
+	child_status = handle_child_exit(pid, shell);
+	setup_parent_ps1_signals();
+	return (finalize_heredoc(filepath, child_status));
 }

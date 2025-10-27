@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:42:33 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/24 21:12:37 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 13:19:03 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,15 +29,17 @@ int	execute_external(t_command *cmd, t_shell *shell)
 	pid_t	pid;
 	int		status;
 
+	setup_parent_wait_signals();
 	pid = fork();
 	if (pid == -1)
 	{
+		setup_parent_ps1_signals();
 		print_perror("fork", NULL);
 		return (EXIT_FAILURE);
 	}
 	if (pid == 0)
 		exec_child_single(cmd, shell);
-	while (waitpid(pid, &status, 0) == -1 && errno == EINTR)
-		continue ;
+	waitpid(pid, &status, 0);
+	setup_parent_ps1_signals();
 	return (get_child_exit_status(status));
 }

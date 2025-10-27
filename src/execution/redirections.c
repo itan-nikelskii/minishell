@@ -45,10 +45,10 @@ static int	process_redir(t_redir *redir, int *in_fd, int *out_fd, t_shell *sh)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	else if (redir->type == TOKEN_REDIR_APPEND)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
-	if (fd == -1 && g_signal_received != SIGINT)
-		return (print_perror("minishell", redir->target), -1);
-	if (fd == -1)
+	if (fd == -130)
 		return (-1);
+	if (fd == -1)
+		return (print_perror("minishell", redir->target), -1);
 	if (redir->type == TOKEN_HEREDOC || redir->type == TOKEN_REDIR_IN)
 		update_fd(in_fd, fd, STDIN_FILENO);
 	else

@@ -6,7 +6,7 @@
 #    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/23 14:38:44 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/10/27 12:51:49 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -78,7 +78,8 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
 # Signal sources
 SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \
               $(SRCDIR)/signals/signals_prompt.c \
-              $(SRCDIR)/signals/signals_heredoc.c
+              $(SRCDIR)/signals/signals_parent_wait.c \
+              $(SRCDIR)/signals/signals_child.c
 
 # Parser sources
 PARSER_SRCS = $(PARSERDIR)/parser.c

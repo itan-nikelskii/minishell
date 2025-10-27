@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/17 09:23:46 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 13:49:51 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -108,16 +108,19 @@ int	execute_pipeline(t_command *cmd_list, t_shell *shell)
 
 	if (pipe(pipefd) == -1)
 		return (print_perror("pipe", NULL), EXIT_FAILURE);
+	setup_parent_wait_signals();
 	pid1 = fork_exec_first(cmd_list, pipefd, shell);
 	if (pid1 == -1)
-		return (cleanup_pipes(pipefd),
+		return (setup_parent_ps1_signals(), cleanup_pipes(pipefd),
 			print_perror("fork", NULL), EXIT_FAILURE);
 	pid2 = fork_exec_second(cmd_list->next, pipefd, shell);
 	if (pid2 == -1)
 		return (cleanup_pipes(pipefd), waitpid(pid1, NULL, 0),
-			print_perror("fork", NULL), EXIT_FAILURE);
+			setup_parent_ps1_signals(), print_perror("fork", NULL),
+			EXIT_FAILURE);
 	cleanup_pipes(pipefd);
 	waitpid(pid1, NULL, 0);
 	waitpid(pid2, &status, 0);
+	setup_parent_ps1_signals();
 	return (get_child_exit_status(status));
 }

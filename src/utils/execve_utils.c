@@ -65,7 +65,7 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 	{
 		if (setup_redirections(cmd->redirs, &in_fd, &out_fd, shell) == -1)
 		{
-			if (g_signal_received == SIGINT)
+			if (shell->last_exit_status == 130)
 				exit(130);
 			exit(EXIT_FAILURE);
 		}

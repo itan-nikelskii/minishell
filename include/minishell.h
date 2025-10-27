@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/24 20:03:09 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 12:50:39 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -237,8 +237,9 @@ void	free_redir_list(t_redir *redir_list);
 /* ************************************************************************** */
 
 void	setup_prompt_signals(void);
+void	setup_parent_wait_signals(void);
 void	setup_exec_signals(void);
-void	setup_heredoc_signals(void);
+void	setup_child_signals(void);
 void	reset_signals(void);
 
 /* ************************************************************************** */

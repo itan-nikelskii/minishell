@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/19 09:38:23 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:57:14 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 13:19:03 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -112,10 +112,12 @@ int	execute_pipeline_multi(t_command *cmd_list, t_shell *shell)
 		return (free(ctx.pipes), free(ctx.pids), 1);
 	if (create_all_pipes(&ctx) == -1)
 		return (free(ctx.pipes), free(ctx.pids), 1);
+	setup_parent_wait_signals();
 	if (fork_all_children(&ctx, cmd_list) == -1)
-		return (free(ctx.pipes), free(ctx.pids), 1);
+		return (setup_parent_ps1_signals(), free(ctx.pipes), free(ctx.pids), 1);
 	close_all_pipes(&ctx, ctx.cmd_count - 1);
 	result = wait_all_children(&ctx);
+	setup_parent_ps1_signals();
 	free(ctx.pipes);
 	free(ctx.pids);
 	return (result);
