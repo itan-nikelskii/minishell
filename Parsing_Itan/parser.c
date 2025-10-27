@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/24 16:06:23 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/27 11:45:53 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -525,14 +525,48 @@ int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tai
 	return (0);
 }
 
-/* Handle the redirection (<, <<, >, >>) chars: determine the redirection type, 
+/* Check for invalid redirection sequences:
+ * more than two redir signs in a row;
+ * <>, ><;
+ * any valid redir sign followed by space(s) and another redir sign.
+Return true if found an invalid sequence, false otherwise. */
+static bool	is_invalid_redir_sequence(const char *line, size_t i)
+{
+	size_t	j;
+	int		count;
+	char	this;
+	char	next;
+
+	j = i;
+	count = 0;
+	this = line[i];
+	next = line[i + 1];
+	while (line[j] == '<' || line[j] == '>')
+	{
+		count++;
+		j++;
+	}
+	if (count > 2)
+		return (true);
+	if ((this == '<' && next == '>') || (this == '>' && next == '<'))
+		return (true);
+	while (isspace(line[j]))											// TODO: change to ft_ version
+		j++;
+	if (line[j] == '<' || line[j] == '>')
+		return (true);
+	return (false);
+}
+
+/* Handle the redirection (<, <<, >, >>) chars: determine the redirection type,
 create a new token, append it to the token list, and update *i depending on
 the number of chars in the redirection type (1 or 2).
-Return 0 on success or -1 on failure. */		
+Return 0 on success, -1 on malloc failure, or -2 on syntax error. */
 int	create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail)
 {
 	t_token	*token;
 
+	if (is_invalid_redir_sequence(line, *i))						// NEW! check for redirection syntax errors
+		return (-2);
 	if (line[*i] == '<')
 	{
 		if (line[*i + 1] && line[*i + 1] == '<')
@@ -542,9 +576,7 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	}
 	else 	// if (line[*i] == '>')
 	{
-		if (line[*i + 1] && line[*i + 1] == '<')					// NEW: the >< case error
-			return (-2);
-		else if (line[*i + 1] && line[*i + 1] == '>')
+		if (line[*i + 1] && line[*i + 1] == '>')
 			token = new_token(TOKEN_REDIR_APPEND, strdup(">>"));	// TODO: switch to the ft_ version later
 		else
 			token = new_token(TOKEN_REDIR_OUT, strdup(">"));		// TODO: switch to the ft_ version later
@@ -652,7 +684,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 				if (ret_value == -1)
 					*error = strdup("malloc failure");					// TODO: switch to the ft_ version later
 				else
-					*error = strdup("Syntax error near unexpected token '<'");	// TODO: switch to the ft_ version later
+					*error = strdup("Syntax error near unexpected redirection token");	// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -886,7 +918,7 @@ t_command	*build_command_from_tokens(t_token **tp, char **error)
 			if (!token->next || token->next->type != TOKEN_WORD)
 			{
 				if (error)
-					*error = strdup("syntax error near unexpected token `newline'");
+					*error = strdup("syntax error near unexpected token 'newline'");
 				return (NULL);
 			}
 			if (consume_redirection_target(token, cmd) != 0)
@@ -915,7 +947,7 @@ t_command	*parse_tokens_to_commands(t_token *t, char **error)
 	tail = NULL;
 	while (t != NULL)
 	{
-		if (t->type == TOKEN_PIPE)			// FIXME: is this why the parser is ok with multiple pipes? then fix
+		if (t->type == TOKEN_PIPE)
 		{
 			t = t->next;
 			continue ;
