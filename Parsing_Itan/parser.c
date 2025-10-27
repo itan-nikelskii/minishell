@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/27 11:45:53 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/27 11:57:35 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -662,7 +662,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '\\' || c == ';')
 		{
-			*error = strdup("Unsupported escape or special character");	// TODO: switch to the ft_ version later
+			*error = strdup("unsupported escape or special character");	// TODO: switch to the ft_ version later
 			free_tokens(head);
 			return (NULL);
 		}
@@ -684,7 +684,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 				if (ret_value == -1)
 					*error = strdup("malloc failure");					// TODO: switch to the ft_ version later
 				else
-					*error = strdup("Syntax error near unexpected redirection token");	// TODO: switch to the ft_ version later
+					*error = strdup("syntax error near unexpected redirection token");	// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -694,7 +694,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		{
 			if (create_token_quote_or_word(line, &i, &head, &tail, shell) != 0)
 			{
-				*error = strdup("Parse error in word/quote");			// TODO: switch to the ft_ version later
+				*error = strdup("parse error in word/quote");			// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -719,7 +719,7 @@ int	validate_pipes(t_token *tokens, char **error)
 		return (0);
 	if (tokens->type == TOKEN_PIPE)		// leading pipe case
 	{
-		*error = strdup("Syntax error: unexpected '|'");
+		*error = strdup("syntax error: unexpected '|'");
 		return (-1);
 	}
 	current = tokens;
@@ -727,7 +727,7 @@ int	validate_pipes(t_token *tokens, char **error)
 	{
 		if (current->type == TOKEN_PIPE && current->next && current->next->type == TOKEN_PIPE)
 		{
-			*error = strdup("Syntax error: unexpected '||'");
+			*error = strdup("syntax error: unexpected '||'");
 			return (-1);
 		}
 		current = current->next;
@@ -997,7 +997,7 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		if (tok_err)
 			result->error = tok_err;
 		else if (!result->error)
-			result->error = strdup("Syntax error in pipe usage");				// TODO: switch to the ft_ version later; check if this line gets executed ever
+			result->error = strdup("syntax error in pipe usage");				// TODO: switch to the ft_ version later; check if this line gets executed ever
 		free_tokens(tokens);
 		return (0);
 	}
@@ -1008,7 +1008,7 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		if (tok_err)
 			result->error = tok_err;
 		else
-			result->error = strdup("Syntax error building commands");				// TODO: switch to the ft_ version later
+			result->error = strdup("syntax error building commands");				// TODO: switch to the ft_ version later
 		free_tokens(tokens);
 		return (0);
 	}
