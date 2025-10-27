@@ -13,34 +13,40 @@
 #include "../../include/minishell.h"
 
 /**
- * Handle exit with no arguments
+ * Handle exit with no arguments (FIX ISSUE 8.2)
  * @param shell Shell state
  */
 static void	exit_no_args(t_shell *shell)
 {
-	ft_putendl_fd("exit", STDERR_FILENO);
+	if (shell->interactive && !shell->in_child)
+		ft_putendl_fd("exit", STDERR_FILENO);
 	exit(shell->last_exit_status);
 }
 
 /**
- * Handle exit with invalid numeric argument
+ * Handle exit with invalid numeric argument (FIX ISSUE 8.2)
  * @param arg The invalid argument
+ * @param shell Shell state
  */
-static void	exit_invalid_arg(char *arg)
+static void	exit_invalid_arg(char *arg, t_shell *shell)
 {
-	ft_putstr_fd("exit\nminishell: exit: ", STDERR_FILENO);
+	if (shell->interactive && !shell->in_child)
+		ft_putendl_fd("exit", STDERR_FILENO);
+	ft_putstr_fd("minishell: exit: ", STDERR_FILENO);
 	ft_putstr_fd(arg, STDERR_FILENO);
 	ft_putendl_fd(": numeric argument required", STDERR_FILENO);
 	exit(2);
 }
 
 /**
- * Handle exit with too many arguments
+ * Handle exit with too many arguments (FIX ISSUE 8.2)
+ * @param shell Shell state
  * @return Always returns 1
  */
-static int	exit_too_many_args(void)
+static int	exit_too_many_args(t_shell *shell)
 {
-	ft_putendl_fd("exit", STDERR_FILENO);
+	if (shell->interactive && !shell->in_child)
+		ft_putendl_fd("exit", STDERR_FILENO);
 	ft_putendl_fd("minishell: exit: too many arguments", STDERR_FILENO);
 	return (1);
 }
@@ -97,9 +103,10 @@ int	builtin_exit(t_command *cmd, t_shell *shell)
 	if (argc == 1)
 		exit_no_args(shell);
 	if (!is_valid_exit_arg(cmd->argv[1], &val))
-		exit_invalid_arg(cmd->argv[1]);
+		exit_invalid_arg(cmd->argv[1], shell);
 	if (argc > 2)
-		return (exit_too_many_args());
-	ft_putendl_fd("exit", STDERR_FILENO);
+		return (exit_too_many_args(shell));
+	if (shell->interactive && !shell->in_child)
+		ft_putendl_fd("exit", STDERR_FILENO);
 	exit((unsigned char)val);
 }

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   signals_heredoc.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 16:52:07 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 18:57:46 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/24 22:20:48 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,6 @@ static void	heredoc_sigint_handler(int sig)
 {
 	(void)sig;
 	g_signal_received = SIGINT;
-	write(STDOUT_FILENO, "\n", 1);
 }
 
 /*

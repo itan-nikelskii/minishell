@@ -123,7 +123,7 @@ void	clear_stash(t_buffer *stash)
 /*
 ** get_next_line: return next line from fd by coordinating stash routines
 ** @fd:     file descriptor to read from
-** Return: malloc’d string ending in '\n' or EOF data on success,
+** Return: malloc'd string ending in '\n' or EOF data on success,
 **         NULL on error, EOF with no data, or invalid parameters
 */
 char	*ft_get_next_line(int fd)
@@ -141,4 +141,20 @@ char	*ft_get_next_line(int fd)
 	if (!update_stash(&buffers[fd]))
 		return (free(line), clear_stash(&buffers[fd]), NULL);
 	return (line);
+}
+
+/*
+** ft_gnl_clear: manually clear the static buffer for a given fd
+** @fd:     file descriptor whose buffer should be cleared
+** Return: void (safe to call multiple times, handles invalid fd)
+**
+** USE CASE: Call before closing a file or at program exit to ensure
+**           all allocated memory is freed (eliminates "still reachable")
+*/
+void	ft_gnl_clear(int fd)
+{
+	static t_buffer	buffers[MAX_FD];
+
+	if (fd >= 0 && fd < MAX_FD)
+		clear_stash(&buffers[fd]);
 }

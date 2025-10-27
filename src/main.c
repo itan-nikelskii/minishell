@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 19:31:20 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/24 20:34:12 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,8 @@ static t_shell	*init_shell(char **envp)
 	shell->last_exit_status = 0;
 	shell->stdin_backup = -1;
 	shell->stdout_backup = -1;
+	shell->interactive = isatty(STDIN_FILENO);
+	shell->in_child = false;
 	return (shell);
 }
 
@@ -47,6 +49,7 @@ static void	cleanup_shell(t_shell *shell)
 
 	if (!shell)
 		return ;
+	ft_gnl_clear(STDIN_FILENO);
 	if (shell->envp)
 	{
 		i = 0;
@@ -62,6 +65,32 @@ static void	cleanup_shell(t_shell *shell)
 		free(shell->xenv);
 	}
 	free(shell);
+}
+
+/**
+ * Read input line based on interactive mode (FIX ISSUE 8 - Issue C)
+ * @param shell: Shell state (to check interactive flag)
+ * @return Line read from stdin, or NULL on EOF
+ *
+ * Uses readline() in interactive mode (with prompt + history)
+ * Uses ft_get_next_line() in non-interactive (no echo, no prompt)
+ * 
+ * TODO: Possible helper trim_line()
+ */
+static char	*read_input_line(t_shell *shell)
+{
+	char	*line;
+	size_t	len;
+
+	if (shell->interactive)
+		return (readline("minishell$ "));
+	line = ft_get_next_line(STDIN_FILENO);
+	if (!line)
+		return (NULL);
+	len = ft_strlen(line);
+	if (len > 0 && line[len - 1] == '\n')
+		line[len - 1] = '\0';
+	return (line);
 }
 
 /**
@@ -103,6 +132,7 @@ static char	*handle_continuation(char *line, t_shell *shell)
 			free(line);
 			if (continuation)
 				free(continuation);
+			g_signal_received = 0;
 			return (NULL);
 		}
 		if (!continuation)
@@ -136,7 +166,8 @@ static void	process_line(char *line, t_shell *shell)
 
 	if (line[0] == '\0')
 		return (free(line));
-	add_history(line);
+	if (shell->interactive && line[0] != '\0')
+		add_history(line);
 	result.commands = NULL;
 	result.error = NULL;
 	result.incomplete_pipe = false;
@@ -170,6 +201,7 @@ int	main(int argc, char **argv, char **envp)
 {
 	t_shell	*shell;
 	char	*line;
+	int		exit_status;
 
 	(void)argc;
 	(void)argv;
@@ -179,13 +211,20 @@ int	main(int argc, char **argv, char **envp)
 	setup_prompt_signals();
 	while (1)
 	{
-		line = readline("minishell$ ");
+		line = read_input_line(shell);
+		if (g_signal_received == SIGINT)
+		{
+			shell->last_exit_status = 130;
+			g_signal_received = 0;
+		}
 		if (!line)
 			break ;
 		process_line(line, shell);
 		g_signal_received = 0;
 	}
-	ft_putstr_fd("exit\n", STDOUT_FILENO);
+	if (shell->interactive)
+		ft_putstr_fd("exit\n", STDOUT_FILENO);
+	exit_status = shell->last_exit_status;
 	cleanup_shell(shell);
-	return (0);
+	return (exit_status);
 }
