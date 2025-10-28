@@ -22,17 +22,21 @@
 void	execve_or_die(t_command *cmd, t_shell *shell)
 {
 	char	*path;
+	char	*pathenv;
 
 	if (!cmd->argv[0] || !*cmd->argv[0])
 	{
-		ft_putstr_fd("command not found\n", STDERR_FILENO);
+		print_error(NULL, "command not found");
 		exit(CMD_NOT_FOUND);
 	}
 	path = resolve_path(cmd->argv[0], shell->envp);
 	if (!path)
 	{
-		ft_putstr_fd(cmd->argv[0], STDERR_FILENO);
-		ft_putstr_fd(": command not found\n", STDERR_FILENO);
+		pathenv = get_env_value("PATH", shell->envp);
+		if (pathenv == NULL || pathenv[0] == '\0')
+			print_error(cmd->argv[0], "No such file or directory");
+		else
+			print_error(cmd->argv[0], "command not found");
 		exit(CMD_NOT_FOUND);
 	}
 	execve(path, cmd->argv, shell->envp);
