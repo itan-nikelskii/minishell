@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/28 20:00:28 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,9 +127,10 @@ int		execute_pipeline(t_command *cmd_list, t_shell *shell);
 int		execute_pipeline_multi(t_command *cmd_list, t_shell *shell);
 
 /* Pipeline utils */
+void	cleanup_pipes(int pipefd[2]);
 void	close_all_pipes(t_pipe_ctx *px, int count);
 int		create_all_pipes(t_pipe_ctx *px);
-int		wait_all_children(t_pipe_ctx *px);
+int		wait_all_children(pid_t *pids, int n);
 
 /* External command executor */
 int		execute_external(t_command *cmd, t_shell *shell);

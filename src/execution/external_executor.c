@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:42:33 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 13:19:03 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/28 18:30:06 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,6 +40,9 @@ int	execute_external(t_command *cmd, t_shell *shell)
 	if (pid == 0)
 		exec_child_single(cmd, shell);
 	waitpid(pid, &status, 0);
+	if (isatty(STDIN_FILENO) && WIFSIGNALED(status)
+		&& WTERMSIG(status) == SIGINT)
+		write(STDOUT_FILENO, "\n", 1);
 	setup_parent_ps1_signals();
 	return (get_child_exit_status(status));
 }

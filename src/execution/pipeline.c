@@ -6,21 +6,11 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/17 09:23:46 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 13:49:51 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/28 20:00:28 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-/**
- * Cleanup pipes in parent process
- * @param pipefd Array [read_end, write_end]
- */
-static void	cleanup_pipes(int pipefd[2])
-{
-	close(pipefd[0]);
-	close(pipefd[1]);
-}
 
 /**
  * Fork and execute first command in pipeline
@@ -102,25 +92,23 @@ static pid_t	fork_exec_second(t_command *cmd, int pipefd[2], t_shell *shell)
 int	execute_pipeline(t_command *cmd_list, t_shell *shell)
 {
 	int		pipefd[2];
-	pid_t	pid1;
-	pid_t	pid2;
+	pid_t	pids[2];
 	int		status;
 
 	if (pipe(pipefd) == -1)
 		return (print_perror("pipe", NULL), EXIT_FAILURE);
 	setup_parent_wait_signals();
-	pid1 = fork_exec_first(cmd_list, pipefd, shell);
-	if (pid1 == -1)
+	pids[0] = fork_exec_first(cmd_list, pipefd, shell);
+	if (pids[0] == -1)
 		return (setup_parent_ps1_signals(), cleanup_pipes(pipefd),
 			print_perror("fork", NULL), EXIT_FAILURE);
-	pid2 = fork_exec_second(cmd_list->next, pipefd, shell);
-	if (pid2 == -1)
-		return (cleanup_pipes(pipefd), waitpid(pid1, NULL, 0),
+	pids[1] = fork_exec_second(cmd_list->next, pipefd, shell);
+	if (pids[1] == -1)
+		return (cleanup_pipes(pipefd), waitpid(pids[0], NULL, 0),
 			setup_parent_ps1_signals(), print_perror("fork", NULL),
 			EXIT_FAILURE);
 	cleanup_pipes(pipefd);
-	waitpid(pid1, NULL, 0);
-	waitpid(pid2, &status, 0);
+	status = wait_all_children(pids, 2);
 	setup_parent_ps1_signals();
 	return (get_child_exit_status(status));
 }
