@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/28 09:48:48 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/28 23:02:22 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -467,7 +467,8 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i + 1;
 	while (s[j] != '\0' && s[j] != '"')
 	{
-		if (s[j] == '$')
+		// FIX ISSUE #20 - Don't expand $ in heredoc delimiters (shell == NULL)
+		if (s[j] == '$' && shell != NULL)
 		{
 			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
@@ -497,7 +498,8 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i;
 	while (s[j] != '\0' && is_word_char(s[j]))
 	{
-		if (s[j] == '$')
+		// FIX ISSUE #20 - Don't expand $ in heredoc delimiters (shell == NULL)
+		if (s[j] == '$' && shell != NULL)
 		{
 			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
@@ -694,11 +696,25 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '\'' || c == '"' || is_word_char(c))
 		{
-			if (create_token_quote_or_word(line, &i, &head, &tail, shell) != 0)
+			// FIX ISSUE #20 - Heredoc delimiter must NEVER be expanded
+			// If previous token is <<, pass NULL to disable expansion
+			if (tail && tail->type == TOKEN_HEREDOC)
 			{
-				*error = strdup("Parse error in word/quote");			// TODO: switch to the ft_ version later
-				free_tokens(head);
-				return (NULL);
+				if (create_token_quote_or_word(line, &i, &head, &tail, NULL) != 0)
+				{
+					*error = strdup("Parse error in word/quote");		// TODO: switch to the ft_ version later
+					free_tokens(head);
+					return (NULL);
+				}
+			}
+			else
+			{
+				if (create_token_quote_or_word(line, &i, &head, &tail, shell) != 0)
+				{
+					*error = strdup("Parse error in word/quote");		// TODO: switch to the ft_ version later
+					free_tokens(head);
+					return (NULL);
+				}
 			}
 			continue ;
 		}
