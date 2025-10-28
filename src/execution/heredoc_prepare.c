@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 19:20:00 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/10/27 23:31:05 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/28 22:14:51 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,18 @@ static void	cleanup_prepared_heredocs(t_command *cmd)
 }
 
 /**
+ * Print heredoc EOF warning (bash-like)
+ * @param delimiter: Expected delimiter
+ */
+static void	print_heredoc_eof_warning(char *delimiter)
+{
+	ft_putstr_fd("minishell: warning: here-document at line X ", STDERR_FILENO);
+	ft_putstr_fd("delimited by end-of-file (wanted `", STDERR_FILENO);
+	ft_putstr_fd(delimiter, STDERR_FILENO);
+	ft_putstr_fd("')\n", STDERR_FILENO);
+}
+
+/**
  * Heredoc read loop in child process
  * @param fd: File descriptor to write to
  * @param delimiter: Heredoc delimiter
@@ -49,8 +61,10 @@ static void	heredoc_read_loop(int fd, char *delimiter, t_shell *shell,
 	while (1)
 	{
 		line = read_heredoc_line(shell);
-		if (!line || g_signal_received == SIGINT)
+		if (g_signal_received == SIGINT)
 			(free(line), close(fd), exit(130));
+		if (!line)
+			(print_heredoc_eof_warning(delimiter), close(fd), exit(0));
 		if (ft_strcmp(line, delimiter) == 0)
 			(free(line), close(fd), exit(0));
 		if (expand)
