@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/27 11:57:35 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/27 22:41:58 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,46 +50,37 @@
 - static because the norm requires it. */
 static volatile sig_atomic_t	g_signal_received = 0;
 
-/* Token types: pipe = |, in = <, out = >, apend = >>, heredoc = << */
+/* Token types */
 typedef enum e_token_type 
 {
 	TOKEN_WORD,
-	TOKEN_PIPE,
-	TOKEN_REDIR_IN,
-	TOKEN_REDIR_OUT,
-	TOKEN_REDIR_APPEND,
-	TOKEN_HEREDOC
+	TOKEN_PIPE,			// |
+	TOKEN_REDIR_IN,		// <
+	TOKEN_REDIR_OUT,	// >
+	TOKEN_REDIR_APPEND,	// >>
+	TOKEN_HEREDOC		// <<
 }	t_token_type;
 
-/* Token structure:
- * type = type of token
- * text = token as a string
- * was_quoted = flag for HEREDOC expansion control (only expand w/o quotes)
- * next = pointer to the next t_token node */
+/* Token structure */
 typedef struct s_token
 {
 	t_token_type	type;
 	char			*text;
-	bool			was_quoted;
+	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
 	struct s_token	*next;
 }	t_token;
 
-/* Redirection entry:
- * type = type of redirection token
- * target = filename (or heredoc delimiter) string
- * was_quoted = flag for HEREDOC expansion control (only expand w/o quotes) */
+/* Redirection entry */		// TODO: document properly
 typedef struct s_redir
 {
-	t_token_type	type;
-	char			*target;
-	bool			was_quoted;
+	t_token_type	type;		// type of redirection token
+	char			*target;	// filename (or heredoc delimiter) string
+	bool			was_quoted;	// for HEREDOC expansion control (only expand w/o quotes of any type)
+	char			*hd_path;	// heredoc temp file path
 	struct s_redir	*next;
 }	t_redir;
 
-/* Command node (in a pipeline):
- * argv = array of commands as strings
- * redirs = pointer to a redirection node
- * next = pointer to the next t_command node */
+/* Command node (in a pipeline) */
 typedef struct s_command
 {
 	char				**argv;
@@ -97,15 +88,12 @@ typedef struct s_command
 	struct s_command	*next;
 }	t_command;
 
-/* Final parser result returned from parse():
- * commands = pointer to commands ready for execution (NULL if none or on error)
- * error = non-NULL on error (caller frees)
- * incomplete_pipe = true if input ended with a single trailing pipe */
-typedef struct s_parse_result
+/* Final parser result returned from parse() */
+typedef struct s_parse_result		// NEW! now supports multiple commands and a trailing pipe
 {
-	t_command	*commands;
-	char		*error;
-	bool		incomplete_pipe;
+	t_command	*commands;			/* built pipeline for execution (NULL if none or on error) */
+	char		*error;				/* non-NULL on error (caller frees); TODO: figure out if needed */
+	bool		incomplete_pipe;	/* true if input ended with a single trailing pipe */
 }	t_parse_result;
 
 /* A dynamic buffer struct to store buffer pointer, length, and cap. */
@@ -126,7 +114,7 @@ t_token		*new_token(t_token_type type, char *text);
 int			append_token(t_token **head, t_token **tail, t_token *node);
 t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 
-/* Shell struct definition; TODO: figure out what's what and document */
+/* FIX ISSUE 4: Shell struct definition (minimal, matches minishell.h) */
 typedef struct s_shell
 {
 	char	**envp;
@@ -137,9 +125,9 @@ typedef struct s_shell
 }	t_shell;
 
 /* env helpers */
-// Using executor's get_env_value() instead
+// FIX ISSUE 2: Using executor's get_env_value() instead
 extern char	*get_env_value(char *key, char **envp);
-// Now can access shell->last_exit_status
+// FIX ISSUE 4: Now can access shell->last_exit_status
 char		*get_exit_status_str(t_shell *shell);
 
 /* buffer/expansion helpers */
@@ -150,30 +138,33 @@ char		*expand_variable(const char *s, size_t index, size_t *j, char **envp);
 
 /* parse small parts */
 int			parse_single_quote(const char *s, size_t *i, char **out);
-int			parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell);
-int			parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell);
-int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, t_shell *shell);
+int			parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
+int			parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell);
+int			expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh);
 
 /* tokenize helpers */
 int			create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tail);
 int			create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail);
-int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, t_shell *shell);
+int			create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell);
 
 /* deal with pipes */
-int			validate_pipes(t_token *tokens, char **error);
-int			strip_trailing_pipe(t_token **tokens, bool *incomplete);
-int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);
+int			validate_pipes(t_token *tokens, char **error);							// NEW! checks leading/double pipes
+int			strip_trailing_pipe(t_token **tokens, bool *incomplete);				// NEW! remove single trailing pipe if present
+int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);		// NEW! combine the two functions above
 
 /* top-level tokenize & parse */
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 t_token		*tokenize(const char *line, char **error, t_shell *shell);
 size_t		count_words_in_segment(t_token *t);
 int			consume_redirection_target(t_token *token, t_command *cmd);
 int			add_word_to_cmd_argv(t_command *cmd, const char *word, size_t *arg_index);
 t_command	*init_t_command(t_token *token);
-t_command	*build_command_from_tokens(t_token **tp, char **error);			// NEW! (for Itan) TODO: check it out
-t_command	*parse_tokens_to_commands(t_token *t, char **error);			// NEW! (for Itan) TODO: check it out
+/* FIX ISSUE 7: Added char **error parameter for specific error messages */
+t_command	*build_command_from_tokens(t_token **tp, char **error);
+t_command	*parse_tokens_to_commands(t_token *t, char **error);
 
 /* top-level parse entrypoint (use in main) */
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 int			parse(const char *line, t_parse_result *result, t_shell *shell);
 
 /* cleanup */
@@ -256,6 +247,7 @@ t_redir	*new_redir(t_token_type type, char *target, bool was_quoted)
 	redir->type = type;
 	redir->target = target;
 	redir->was_quoted = was_quoted;
+	redir->hd_path = NULL;
 	redir->next = NULL;
 	return (redir);
 }
@@ -280,13 +272,12 @@ t_dynamic_buf	*dynbuf_create_and_init(void)
 
 /* ====================== Variable expansion helpers ====================== */
 
-/* TODO: documentation (buffer[12] because an int in C is typically 32 bits => 
-can hold up to 2,147,483,647 (10 digits + sign + \0); ^= is bitwise XOR to
-reverse the characters in buffer because the digits were built backwards during
-the division loop) */
+// FIX ISSUE 2: Removed parser_get_env_value() - using executor's get_env_value() instead
+
+/* FIX ISSUE 4: Get exit status from shell instead of hardcoded "0" */
 char	*get_exit_status_str(t_shell *shell)
 {
-	char	buffer[12];
+	char	buffer[12];							// FIXME: magic numbers (why 12?)
 	int		n;
 	int		len;
 	int		i;
@@ -374,7 +365,7 @@ int	append_str(t_dynamic_buf *dynamic_buf, const char *s)
 	return (0);
 }
 
-/* TODO: documentation */
+/* FIX ISSUE 2: Added char **envp parameter to use executor's get_env_value() */
 char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 {
 	size_t	name_start;
@@ -398,8 +389,8 @@ char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 	return (result);
 }
 
-/* TODO: documentation (after proper refactoring for norminette) */
-int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, t_shell *shell)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, char **envp, t_shell *sh)
 {
 	size_t	index;
 	char	*expanded;
@@ -407,14 +398,14 @@ int	expand_dollar(const char *s, size_t *j, t_dynamic_buf *buf, t_shell *shell)
 	index = *j + 1;
 	if (s[index] == '?')
 	{
-		expanded = get_exit_status_str(shell);
+		expanded = get_exit_status_str(sh);
 		if (!expanded)
 			return (-1);
 		*j = index + 1;
 	}
 	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
 	{
-		expanded = expand_variable(s, index, j, shell->envp);
+		expanded = expand_variable(s, index, j, envp);
 		if (!expanded)
 			return (-1);
 	}
@@ -452,9 +443,8 @@ int	parse_single_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* Parse double-quoted string, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
-int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	parse_double_quote(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -467,7 +457,7 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -482,9 +472,8 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	return (0);
 }
 
-/* Parse an unquoted word, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
-int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
+/* FIX ISSUE 2+4: Added char **envp and t_shell *shell parameters */
+int	parse_unquoted_word(const char *s, size_t *i, char **out, char **envp, t_shell *shell)
 {
 	size_t			j;
 	t_dynamic_buf	*dynamic_buf;
@@ -497,7 +486,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 	{
 		if (s[j] == '$')
 		{
-			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
+			if (expand_dollar(s, &j, dynamic_buf, envp, shell) != 0)
 				return (dynamic_buf_free(dynamic_buf), -1);
 			continue ;
 		}
@@ -525,48 +514,14 @@ int	create_token_pipe(const char *line, size_t *i, t_token **head, t_token **tai
 	return (0);
 }
 
-/* Check for invalid redirection sequences:
- * more than two redir signs in a row;
- * <>, ><;
- * any valid redir sign followed by space(s) and another redir sign.
-Return true if found an invalid sequence, false otherwise. */
-static bool	is_invalid_redir_sequence(const char *line, size_t i)
-{
-	size_t	j;
-	int		count;
-	char	this;
-	char	next;
-
-	j = i;
-	count = 0;
-	this = line[i];
-	next = line[i + 1];
-	while (line[j] == '<' || line[j] == '>')
-	{
-		count++;
-		j++;
-	}
-	if (count > 2)
-		return (true);
-	if ((this == '<' && next == '>') || (this == '>' && next == '<'))
-		return (true);
-	while (isspace(line[j]))											// TODO: change to ft_ version
-		j++;
-	if (line[j] == '<' || line[j] == '>')
-		return (true);
-	return (false);
-}
-
-/* Handle the redirection (<, <<, >, >>) chars: determine the redirection type,
+/* Handle the redirection (<, <<, >, >>) chars: determine the redirection type, 
 create a new token, append it to the token list, and update *i depending on
 the number of chars in the redirection type (1 or 2).
-Return 0 on success, -1 on malloc failure, or -2 on syntax error. */
+Return 0 on success or -1 on failure. */		
 int	create_token_redirection(const char *line, size_t *i, t_token **head, t_token **tail)
 {
 	t_token	*token;
 
-	if (is_invalid_redir_sequence(line, *i))						// NEW! check for redirection syntax errors
-		return (-2);
 	if (line[*i] == '<')
 	{
 		if (line[*i + 1] && line[*i + 1] == '<')
@@ -576,7 +531,9 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	}
 	else 	// if (line[*i] == '>')
 	{
-		if (line[*i + 1] && line[*i + 1] == '>')
+		if (line[*i + 1] && line[*i + 1] == '<')					// NEW: the >< case error
+			return (-2);
+		else if (line[*i + 1] && line[*i + 1] == '>')
 			token = new_token(TOKEN_REDIR_APPEND, strdup(">>"));	// TODO: switch to the ft_ version later
 		else
 			token = new_token(TOKEN_REDIR_OUT, strdup(">"));		// TODO: switch to the ft_ version later
@@ -590,11 +547,8 @@ int	create_token_redirection(const char *line, size_t *i, t_token **head, t_toke
 	return (0);
 }
 
-/* Create a token out of an unquoted word or a quoted string. Parse the string
-depending on the presence and type of quotes; create a new token and return 0
-on success or -1 on failure. */
-/* TODO: document new addition: Coalescere segments + use envp and shell for expansion */
-int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, t_shell *shell)
+/* FIX ISSUE 1+2+4: Coalescere segments + use envp and shell for expansion */
+int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_token **tail, char **envp, t_shell *shell)
 {
 	t_dynamic_buf	*buf;
 	bool			had_quote;
@@ -605,7 +559,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	if (!buf)
 		return (-1);
 	had_quote = false;
-	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])			// TODO: turn into ft_ version; TODO: duble check the logic
+	while (line[*i] != '\0' && !isspace((unsigned char)line[*i])			// TODO: turn into ft_ version
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;
@@ -617,13 +571,13 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 		}
 		else if (line[*i] == '"')
 		{
-			if (parse_double_quote(line, i, &segment, shell) != 0)
+			if (parse_double_quote(line, i, &segment, envp, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 			had_quote = true;
 		}
 		else
 		{
-			if (parse_unquoted_word(line, i, &segment, shell) != 0)
+			if (parse_unquoted_word(line, i, &segment, envp, shell) != 0)
 				return (dynamic_buf_free(buf), -1);
 		}
 		if (append_str(buf, segment) != 0)
@@ -640,7 +594,8 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 	return (0);
 }
 
-/* Tokenize input line into linked token list */		// FIXME: too long; decide if it should deal with error handling (refactoring will heavily depend on this)
+/* FIX ISSUE 2: Added char **envp parameter */
+/* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 t_token	*tokenize(const char *line, char **error, t_shell *shell)
 {
 	t_token	*head;
@@ -662,7 +617,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '\\' || c == ';')
 		{
-			*error = strdup("unsupported escape or special character");	// TODO: switch to the ft_ version later
+			*error = strdup("Unsupported escape or special character");	// TODO: switch to the ft_ version later
 			free_tokens(head);
 			return (NULL);
 		}
@@ -684,7 +639,7 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 				if (ret_value == -1)
 					*error = strdup("malloc failure");					// TODO: switch to the ft_ version later
 				else
-					*error = strdup("syntax error near unexpected redirection token");	// TODO: switch to the ft_ version later
+					*error = strdup("Syntax error near unexpected token '<'");	// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -692,9 +647,9 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 		}
 		if (c == '\'' || c == '"' || is_word_char(c))
 		{
-			if (create_token_quote_or_word(line, &i, &head, &tail, shell) != 0)
+			if (create_token_quote_or_word(line, &i, &head, &tail, shell->envp, shell) != 0)
 			{
-				*error = strdup("parse error in word/quote");			// TODO: switch to the ft_ version later
+				*error = strdup("Parse error in word/quote");			// TODO: switch to the ft_ version later
 				free_tokens(head);
 				return (NULL);
 			}
@@ -719,7 +674,7 @@ int	validate_pipes(t_token *tokens, char **error)
 		return (0);
 	if (tokens->type == TOKEN_PIPE)		// leading pipe case
 	{
-		*error = strdup("syntax error: unexpected '|'");
+		*error = strdup("Syntax error: unexpected '|'");
 		return (-1);
 	}
 	current = tokens;
@@ -727,7 +682,7 @@ int	validate_pipes(t_token *tokens, char **error)
 	{
 		if (current->type == TOKEN_PIPE && current->next && current->next->type == TOKEN_PIPE)
 		{
-			*error = strdup("syntax error: unexpected '||'");
+			*error = strdup("Syntax error: unexpected '||'");
 			return (-1);
 		}
 		current = current->next;
@@ -855,7 +810,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 		free(target);
 		return (-1);
 	}
-	// FIX: Append to end instead of prepend to head
+	// FIX ISSUE 3: Append to end instead of prepend to head
 	// Old: prepend created reversed list (last-typed processed first)
 	// New: append maintains correct order (last-typed processed last)
 	if (!cmd->redirs)
@@ -918,7 +873,7 @@ t_command	*build_command_from_tokens(t_token **tp, char **error)
 			if (!token->next || token->next->type != TOKEN_WORD)
 			{
 				if (error)
-					*error = strdup("syntax error near unexpected token 'newline'");
+					*error = strdup("syntax error near unexpected token `newline'");
 				return (NULL);
 			}
 			if (consume_redirection_target(token, cmd) != 0)
@@ -947,7 +902,7 @@ t_command	*parse_tokens_to_commands(t_token *t, char **error)
 	tail = NULL;
 	while (t != NULL)
 	{
-		if (t->type == TOKEN_PIPE)
+		if (t->type == TOKEN_PIPE)			// FIXME: is this why the parser is ok with multiple pipes? then fix
 		{
 			t = t->next;
 			continue ;
@@ -971,9 +926,9 @@ t_command	*parse_tokens_to_commands(t_token *t, char **error)
 	return (head);
 }
 
-/* =================== Top-level parse entrypoint =================== */
+/* =================== Top-level parse entrypoint =================== */		// NEW! entrypoint for all parsing; to be called from main()
 
-// FIXME: too long; TODO: documentation
+// FIXME: too long
 /* FIX ISSUE 2: Added char **envp parameter */
 /* FIX ISSUE 4: Added t_shell *shell parameter for $? expansion */
 int	parse(const char *line, t_parse_result *result, t_shell *shell)
@@ -997,7 +952,7 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		if (tok_err)
 			result->error = tok_err;
 		else if (!result->error)
-			result->error = strdup("syntax error in pipe usage");				// TODO: switch to the ft_ version later; check if this line gets executed ever
+			result->error = strdup("Syntax error in pipe usage");				// TODO: switch to the ft_ version later; check if this line gets executed ever
 		free_tokens(tokens);
 		return (0);
 	}
@@ -1008,7 +963,7 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 		if (tok_err)
 			result->error = tok_err;
 		else
-			result->error = strdup("syntax error building commands");				// TODO: switch to the ft_ version later
+			result->error = strdup("Syntax error building commands");				// TODO: switch to the ft_ version later
 		free_tokens(tokens);
 		return (0);
 	}
@@ -1181,7 +1136,7 @@ void	sigint_handler(int sig)
 // 		print_commands(cmds);
 // 		free_commands(cmds);
 // 		free(line);
-// 		g_signal_received = 0;
+// 		g_signal_received = 0;	// TODO: figure out
 // 	}
 // 	return (0);
 // }

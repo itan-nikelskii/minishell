@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 09:28:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 12:59:27 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 23:50:20 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,29 +26,47 @@ static void	update_fd(int *fd_ptr, int new_fd, int std_fd)
 }
 
 /**
+ * Open heredoc file and unlink
+ * @param redir Redirection containing heredoc info
+ * @return File descriptor of opened heredoc, or -1 on error
+ */
+static int	open_heredoc(t_redir *redir)
+{
+	int	fd;
+
+	if (!redir->hd_path)
+		return (print_error("heredoc", "not prepared"), -1);
+	fd = open(redir->hd_path, O_RDONLY);
+	if (fd == -1)
+		return (print_perror("open", redir->hd_path), -1);
+	unlink(redir->hd_path);
+	return (fd);
+}
+
+/**
  * Process single redirection and update in_fd/out_fd
  * @param redir Redirection to process
- * @param in_fd Pointer to input fd
- * @param out_fd Pointer to output fd
+ * @param in_fd Pointer to input file descriptor
+ * @param out_fd Pointer to output file descriptor
  * @return 0 on success, -1 on error
  */
-static int	process_redir(t_redir *redir, int *in_fd, int *out_fd, t_shell *sh)
+static int	process_redir(t_redir *redir, int *in_fd, int *out_fd)
 {
 	int	fd;
 
 	fd = -1;
 	if (redir->type == TOKEN_HEREDOC)
-		fd = process_heredoc(redir->target, sh, !redir->was_quoted);
+		fd = open_heredoc(redir);
 	else if (redir->type == TOKEN_REDIR_IN)
 		fd = open(redir->target, O_RDONLY);
 	else if (redir->type == TOKEN_REDIR_OUT)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	else if (redir->type == TOKEN_REDIR_APPEND)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
-	if (fd == -130)
-		return (-1);
+	if (fd == -1 && redir->type != TOKEN_HEREDOC)
+		print_perror("minishell", redir->target);
 	if (fd == -1)
-		return (print_perror("minishell", redir->target), -1);
+		return (-1);
 	if (redir->type == TOKEN_HEREDOC || redir->type == TOKEN_REDIR_IN)
 		update_fd(in_fd, fd, STDIN_FILENO);
 	else
@@ -57,14 +75,13 @@ static int	process_redir(t_redir *redir, int *in_fd, int *out_fd, t_shell *sh)
 }
 
 /**
- * Setup redirections: open all files and update in_fd/out_fd
- * @param redirs List of redirections
- * @param in_fd Pointer to input fd (initialized to STDIN_FILENO)
- * @param out_fd Pointer to output fd (initialized to STDOUT_FILENO)
- * @param shell Shell state for heredoc expansions
+ * Setup redirections and update in_fd/out_fd
+ * @param redirs Linked list of redirections
+ * @param in_fd Pointer to input file descriptor
+ * @param out_fd Pointer to output file descriptor
  * @return 0 on success, -1 on error
  */
-int	setup_redirections(t_redir *redirs, int *in_fd, int *out_fd, t_shell *sh)
+int	setup_redirections(t_redir *redirs, int *in_fd, int *out_fd)
 {
 	t_redir	*current;
 
@@ -73,7 +90,7 @@ int	setup_redirections(t_redir *redirs, int *in_fd, int *out_fd, t_shell *sh)
 	current = redirs;
 	while (current)
 	{
-		if (process_redir(current, in_fd, out_fd, sh) == -1)
+		if (process_redir(current, in_fd, out_fd) == -1)
 		{
 			update_fd(in_fd, STDIN_FILENO, STDIN_FILENO);
 			update_fd(out_fd, STDOUT_FILENO, STDOUT_FILENO);

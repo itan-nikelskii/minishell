@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/17 16:27:35 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:58:18 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/28 00:57:52 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,7 +63,7 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 	out_fd = STDOUT_FILENO;
 	if (cmd->redirs)
 	{
-		if (setup_redirections(cmd->redirs, &in_fd, &out_fd, shell) == -1)
+		if (setup_redirections(cmd->redirs, &in_fd, &out_fd) == -1)
 		{
 			if (shell->last_exit_status == 130)
 				exit(130);

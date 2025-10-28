@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 12:50:39 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,7 @@ typedef struct s_redir
 	t_token_type	type;
 	char			*target;
 	bool			was_quoted;
+	char			*hd_path;
 	struct s_redir	*next;
 }	t_redir;
 
@@ -152,7 +153,7 @@ int		builtin_exit(t_command *cmd, t_shell *shell);
 /*                              REDIRECTIONS                                  */
 /* ************************************************************************** */
 
-int		setup_redirections(t_redir *redirs, int *in_fd, int *out_fd, t_shell *sh);
+int		setup_redirections(t_redir *redirs, int *in_fd, int *out_fd);
 int		apply_redirections(int in_fd, int out_fd);
 int		save_std_fds(t_shell *shell);
 int		restore_std_fds(t_shell *shell);
@@ -161,15 +162,16 @@ int		restore_std_fds(t_shell *shell);
 /*                              HEREDOC                                       */
 /* ************************************************************************** */
 
-int		process_heredoc(char *delimiter, t_shell *shell, bool expand);
+/* Heredoc preprocessing */
+int		prepare_heredocs(t_command *cmd, t_shell *shell);
 int		get_heredoc_counter(void);
 void	build_heredoc_filepath(char *filepath);
-void	cleanup_heredoc(int fd_write, char *filepath, char *line);
 char	*hd_expand_line(const char *line, t_shell *shell, bool expand);
 int		hd_append_str(char **buf, const char *str);
 int		hd_append_char(char **buf, char c);
 char	*hd_getenv(t_shell *shell, char *name);
 char	*hd_extract_varname(const char *str, size_t i);
+char	*read_heredoc_line(t_shell *shell);
 
 /* ************************************************************************** */
 /*                              UTILS                                         */
@@ -232,14 +234,21 @@ void	free_array(char **array);
 void	free_cmd_list(t_command *cmd_list);
 void	free_redir_list(t_redir *redir_list);
 
+/* Shell lifecycle */
+t_shell	*shell_init(char **envp);
+int		shell_cleanup(t_shell *shell);
+
+/* Input utils */
+char	*read_input_line(t_shell *shell);
+
 /* ************************************************************************** */
 /*                              SIGNALS                                       */
 /* ************************************************************************** */
 
-void	setup_prompt_signals(void);
+void	setup_parent_ps1_signals(void);
 void	setup_parent_wait_signals(void);
 void	setup_exec_signals(void);
-void	setup_child_signals(void);
+void	setup_child_ps2_signals(void);
 void	reset_signals(void);
 
 /* ************************************************************************** */
@@ -248,6 +257,12 @@ void	reset_signals(void);
 
 int		parse(const char *line, t_parse_result *result, t_shell *shell);
 void	free_commands(t_command *cmd);
+
+/* ************************************************************************** */
+/*                          CONTINUATION (PS2)                                */
+/* ************************************************************************** */
+
+char	*process_continuation(char *line, t_shell *shell);
 
 /* ************************************************************************** */
 /*                              GLOBAL VARIABLES                              */

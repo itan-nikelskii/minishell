@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 10:37:18 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 17:10:45 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,4 +58,25 @@ void	cleanup_heredoc(int fd_write, char *filepath, char *line)
 		close(fd_write);
 	if (filepath && filepath[0])
 		unlink(filepath);
+}
+
+/**
+ * Read a line for heredoc (readline if interactive, GNL otherwise)
+ * @param shell: Shell state
+ * @return Line read, or NULL on EOF/error
+ */
+char	*read_heredoc_line(t_shell *shell)
+{
+	char	*line;
+	size_t	len;
+
+	if (shell->interactive)
+		return (readline("> "));
+	line = ft_get_next_line(STDIN_FILENO);
+	if (!line)
+		return (NULL);
+	len = ft_strlen(line);
+	if (len > 0 && line[len - 1] == '\n')
+		line[len - 1] = '\0';
+	return (line);
 }

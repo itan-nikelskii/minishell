@@ -6,30 +6,11 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 14:27:17 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 19:13:07 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-/**
- * Initialize parse result and handle empty lines
- * @param line: Input line
- * @param result: Parse result to initialize
- * @param shell: Shell state
- * @return 1 if should continue, 0 if should return
- */
-static int	init_parse(char *line, t_parse_result *result, t_shell *shell)
-{
-	if (line[0] == '\0')
-		return (free(line), 0);
-	if (shell->interactive && line[0] != '\0')
-		add_history(line);
-	result->commands = NULL;
-	result->error = NULL;
-	result->incomplete_pipe = false;
-	return (1);
-}
 
 /**
  * Process a single input line: parse and execute
@@ -40,12 +21,14 @@ static void	process_line(char *line, t_shell *shell)
 {
 	t_parse_result	result;
 
-	if (!init_parse(line, &result, shell))
-		return ;
+	result.commands = NULL;
+	result.error = NULL;
+	result.incomplete_pipe = false;
 	if (parse(line, &result, shell) != 0)
 		return (print_error(NULL, "internal parse error"), free(line));
 	if (result.error)
-		return (handle_parse_error(&result, line, shell));
+		return (print_error(NULL, result.error), free(result.error),
+			shell->last_exit_status = 2, free(line));
 	if (result.incomplete_pipe)
 	{
 		line = process_continuation(line, shell);
@@ -80,6 +63,13 @@ static void	main_loop(t_shell *shell)
 		}
 		if (!line)
 			break ;
+		if (line[0] == '\0')
+		{
+			free(line);
+			continue ;
+		}
+		if (shell->interactive)
+			add_history(line);
 		process_line(line, shell);
 		g_signal_received = 0;
 	}

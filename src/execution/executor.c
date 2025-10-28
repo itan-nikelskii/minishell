@@ -6,11 +6,33 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+/**
+ * Prepare all heredocs for command list
+ * @param cmd_list Command list
+ * @param shell Shell state
+ * @return 0 on success, 130 on SIGINT, -1 on error
+ */
+static int	prepare_all_heredocs(t_command *cmd_list, t_shell *shell)
+{
+	t_command	*cmd;
+	int			result;
+
+	cmd = cmd_list;
+	while (cmd)
+	{
+		result = prepare_heredocs(cmd, shell);
+		if (result != 0)
+			return (result);
+		cmd = cmd->next;
+	}
+	return (0);
+}
 
 /**
  * Main execution function
@@ -23,9 +45,15 @@ int	execute_command(t_command *cmd, t_shell *shell)
 {
 	int	cmd_count;
 	int	exit_status;
+	int	result;
 
 	if (!cmd || !shell)
 		return (1);
+	result = prepare_all_heredocs(cmd, shell);
+	if (result == 130)
+		return (shell->last_exit_status = 130);
+	if (result != 0)
+		return (shell->last_exit_status = 1);
 	cmd_count = count_commands(cmd);
 	if (cmd_count == 1)
 		exit_status = execute_single_command(cmd, shell);
@@ -49,7 +77,7 @@ static int	exec_builtin_with_redir(t_command *cmd, t_shell *shell)
 	int	out_fd;
 	int	exit_status;
 
-	if (setup_redirections(cmd->redirs, &in_fd, &out_fd, shell) == -1)
+	if (setup_redirections(cmd->redirs, &in_fd, &out_fd) == -1)
 	{
 		if (g_signal_received == SIGINT)
 			return (130);

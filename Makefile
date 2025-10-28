@@ -6,7 +6,7 @@
 #    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/27 12:51:49 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -46,9 +46,10 @@ EXEC_SRCS = $(SRCDIR)/execution/executor.c \
             $(SRCDIR)/execution/pipeline.c \
             $(SRCDIR)/execution/pipeline_multi.c \
             $(SRCDIR)/execution/pipeline_utils.c \
-            $(SRCDIR)/execution/heredoc.c \
             $(SRCDIR)/execution/heredoc_expand.c \
-            $(SRCDIR)/execution/heredoc_expand_utils.c
+            $(SRCDIR)/execution/heredoc_expand_utils.c \
+            $(SRCDIR)/execution/heredoc_prepare.c \
+            $(SRCDIR)/execution/continuation.c
 
 # Builtin sources
 BUILTIN_SRCS = $(SRCDIR)/builtins/builtin_dispatcher.c \
@@ -73,13 +74,15 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/array_utils.c \
              $(SRCDIR)/utils/search_utils.c \
              $(SRCDIR)/utils/exit_utils.c \
-             $(SRCDIR)/utils/heredoc_utils.c
+             $(SRCDIR)/utils/heredoc_utils.c \
+             $(SRCDIR)/utils/shell_utils.c \
+             $(SRCDIR)/utils/input_utils.c
 
 # Signal sources
 SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \
-              $(SRCDIR)/signals/signals_prompt.c \
+              $(SRCDIR)/signals/signals_parent_ps1.c \
               $(SRCDIR)/signals/signals_parent_wait.c \
-              $(SRCDIR)/signals/signals_child.c
+              $(SRCDIR)/signals/signals_child_ps2.c
 
 # Parser sources
 PARSER_SRCS = $(PARSERDIR)/parser.c

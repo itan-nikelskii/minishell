@@ -35,20 +35,3 @@ char	*read_input_line(t_shell *shell)
 		line[len - 1] = '\0';
 	return (line);
 }
-
-/**
- * Handle parse errors (FIX ISSUE 7: set exit status to 2)
- * @param result: Parse result with error message
- * @param line: Input line to free
- * @param shell: Shell state (for setting exit status)
- */
-void	handle_parse_error(t_parse_result *result, char *line, t_shell *shell)
-{
-	if (result->error)
-	{
-		print_error(NULL, result->error);
-		free(result->error);
-	}
-	shell->last_exit_status = 2;
-	free(line);
-}
