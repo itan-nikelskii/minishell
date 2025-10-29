@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/10 09:12:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/28 23:02:22 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/29 10:31:27 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -613,7 +613,26 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token **head, t_to
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;
-		if (line[*i] == '\'')
+		/* NEW: Handle $'...' and $"..." - skip the leading '$' and treat
+		the following quote as the real quote opening so the '$' is not
+		emitted as a literal */
+		if (line[*i] == '$' && (line[*i + 1] == '\'' || line[*i + 1] == '"'))
+		{
+			*i = *i + 1;			// skip the '$'
+			if (line[*i] == '\'')
+			{
+				if (parse_single_quote(line, i, &segment) != 0)
+					return (dynamic_buf_free(buf), -1);
+				had_quote = true;
+			}
+			else if (line[*i] == '"')
+			{
+				if (parse_double_quote(line, i, &segment, shell) != 0)
+					return (dynamic_buf_free(buf), -1);
+				had_quote = true;
+			}
+		}
+		else if (line[*i] == '\'')
 		{
 			if (parse_single_quote(line, i, &segment) != 0)
 				return (dynamic_buf_free(buf), -1);

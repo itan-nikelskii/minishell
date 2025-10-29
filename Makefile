@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
+#    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/10/29 09:16:15 by inikelsk         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -45,7 +45,6 @@ EXEC_SRCS = $(SRCDIR)/execution/executor.c \
             $(SRCDIR)/execution/redirection_backup.c \
             $(SRCDIR)/execution/pipeline.c \
             $(SRCDIR)/execution/pipeline_multi.c \
-            $(SRCDIR)/execution/pipeline_utils.c \
             $(SRCDIR)/execution/heredoc_expand.c \
             $(SRCDIR)/execution/heredoc_expand_utils.c \
             $(SRCDIR)/execution/heredoc_prepare.c \
@@ -62,6 +61,7 @@ BUILTIN_SRCS = $(SRCDIR)/builtins/builtin_dispatcher.c \
                $(SRCDIR)/builtins/exit.c
 
 # Utils sources
+# MODIFIED 1: pipeline_utils was listed in exec_srcs above but needed here; compiler complained
 UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/memory_utils.c \
              $(SRCDIR)/utils/path_resolver.c \
@@ -76,7 +76,8 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/exit_utils.c \
              $(SRCDIR)/utils/heredoc_utils.c \
              $(SRCDIR)/utils/shell_utils.c \
-             $(SRCDIR)/utils/input_utils.c
+             $(SRCDIR)/utils/input_utils.c \
+             $(SRCDIR)/utils/pipeline_utils.c \
 
 # Signal sources
 SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \
