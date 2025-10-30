@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 13:58:30 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 16:56:29 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,8 +29,8 @@
 # include <stdbool.h>
 # include <readline/readline.h>
 # include <readline/history.h>
-# include "parser.h"
 # include "../libft/include/libft.h"
+# include "parser.h"
 
 /* ************************************************************************** */
 /*                              CONSTANTS                                     */
@@ -47,8 +47,8 @@
 /*                              STRUCTURES                                    */
 /* ************************************************************************** */
 
-/* Declaration of t_shell (defined in parser.h) */
-typedef struct s_shell t_shell;
+/* Note: Main structures (t_token_type, t_token_t, t_redir, t_command, */
+/* t_shell, t_parse_result) are now defined in parser.h */
 
 /* Multi-pipe execution context */
 typedef struct s_pipe_ctx
@@ -105,6 +105,8 @@ int		setup_redirections(t_redir *redirs, int *in_fd, int *out_fd);
 int		apply_redirections(int in_fd, int out_fd);
 int		save_std_fds(t_shell *shell);
 int		restore_std_fds(t_shell *shell);
+void	close_redir_fds(int in_fd, int out_fd);
+void	update_fd(int *fd_ptr, int new_fd, int std_fd);
 
 /* ************************************************************************** */
 /*                              HEREDOC                                       */
@@ -120,6 +122,7 @@ int		hd_append_char(char **buf, char c);
 char	*hd_getenv(t_shell *shell, char *name);
 char	*hd_extract_varname(const char *str, size_t i);
 char	*read_heredoc_line(t_shell *shell);
+bool	too_many_heredocs(t_command *cmd);
 
 /* ************************************************************************** */
 /*                              UTILS                                         */
@@ -203,8 +206,7 @@ void	reset_signals(void);
 /*                              PARSER                                        */
 /* ************************************************************************** */
 
-int		parse(const char *line, t_parse_result *result, t_shell *shell);
-void	free_commands(t_command *cmd);
+/* Note: Parser functions (parse, free_commands) are declared in parser.h */
 
 /* ************************************************************************** */
 /*                          CONTINUATION (PS2)                                */

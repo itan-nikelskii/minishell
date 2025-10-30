@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 15:39:17 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 22:41:58 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 17:11:49 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,48 +29,4 @@ void	free_array(char **array)
 		i++;
 	}
 	free(array);
-}
-
-/**
- * Frees a linked list of redirections
- * @param redir_list First redirection in list
- */
-void	free_redir_list(t_redir *redir_list)
-{
-	t_redir	*current;
-	t_redir	*next;
-
-	current = redir_list;
-	while (current)
-	{
-		next = current->next;
-		if (current->target)
-			free(current->target);
-		if (current->hd_path)
-			free(current->hd_path);
-		free(current);
-		current = next;
-	}
-}
-
-/**
- * Frees a linked list of commands
- * @param cmd_list First command in list
- */
-void	free_cmd_list(t_command *cmd_list)
-{
-	t_command	*current;
-	t_command	*next;
-
-	current = cmd_list;
-	while (current)
-	{
-		next = current->next;
-		if (current->argv)
-			free_array(current->argv);
-		if (current->redirs)
-			free_redir_list(current->redirs);
-		free(current);
-		current = next;
-	}
 }

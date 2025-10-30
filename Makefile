@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
+#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/30 13:52:19 by inikelsk         ###   ########.fr        #
+#    Updated: 2025/10/30 17:03:23 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,7 +39,6 @@ LIBFTDIR = libft
 
 # Execution sources
 EXEC_SRCS = $(SRCDIR)/execution/executor.c \
-            $(SRCDIR)/execution/external_executor.c \
             $(SRCDIR)/execution/redirections.c \
             $(SRCDIR)/execution/redirection_backup.c \
             $(SRCDIR)/execution/pipeline.c \
@@ -72,6 +71,7 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/array_utils.c \
              $(SRCDIR)/utils/search_utils.c \
              $(SRCDIR)/utils/exit_utils.c \
+             $(SRCDIR)/utils/redir_utils.c \
              $(SRCDIR)/utils/heredoc_utils.c \
              $(SRCDIR)/utils/shell_utils.c \
              $(SRCDIR)/utils/input_utils.c \

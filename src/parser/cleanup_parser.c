@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cleanup_parser.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:32:59 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:29:51 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 17:08:25 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,6 +51,8 @@ static void	free_redirs(t_redir *redir)
 	{
 		next_redir = redir->next;
 		free(redir->target);
+		if (redir->hd_path)
+			free(redir->hd_path);
 		free(redir);
 		redir = next_redir;
 	}
