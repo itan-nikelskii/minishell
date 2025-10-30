@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/28 20:00:28 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 13:58:30 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,7 +29,8 @@
 # include <stdbool.h>
 # include <readline/readline.h>
 # include <readline/history.h>
-# include "../../libft/include/libft.h"
+# include "parser.h"
+# include "../libft/include/libft.h"
 
 /* ************************************************************************** */
 /*                              CONSTANTS                                     */
@@ -46,54 +47,8 @@
 /*                              STRUCTURES                                    */
 /* ************************************************************************** */
 
-/* Type of token */
-typedef enum e_token_type
-{
-	TOKEN_WORD,
-	TOKEN_PIPE,
-	TOKEN_REDIR_IN,
-	TOKEN_REDIR_OUT,
-	TOKEN_REDIR_APPEND,
-	TOKEN_HEREDOC,
-}	t_token_type;
-
-/* Token structure */
-typedef struct s_token
-{
-	t_token_type	type;
-	char			*text;
-	struct s_token	*next;
-}	t_token_t;
-
-/* Redirection entry */
-typedef struct s_redir
-{
-	t_token_type	type;
-	char			*target;
-	bool			was_quoted;
-	char			*hd_path;
-	struct s_redir	*next;
-}	t_redir;
-
-/* Command node (in a pipeline) */
-typedef struct s_cmd
-{
-	char			**argv;
-	t_redir			*redirs;
-	struct s_cmd	*next;
-}	t_command;
-
-/* Shell state - global state of the shell */
-typedef struct s_shell
-{
-	char	**envp;
-	char	**xenv;
-	int		last_exit_status;
-	int		stdin_backup;
-	int		stdout_backup;
-	bool	interactive;
-	bool	in_child;
-}	t_shell;
+/* Declaration of t_shell (defined in parser.h) */
+typedef struct s_shell t_shell;
 
 /* Multi-pipe execution context */
 typedef struct s_pipe_ctx
@@ -103,14 +58,6 @@ typedef struct s_pipe_ctx
 	pid_t		*pids;
 	t_shell		*shell;
 }	t_pipe_ctx;
-
-/* Parser result structure */
-typedef struct s_parse_result
-{
-	t_command	*commands;
-	char		*error;
-	bool		incomplete_pipe;
-}	t_parse_result;
 
 /* ************************************************************************** */
 /*                              EXECUTOR                                      */

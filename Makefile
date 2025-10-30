@@ -6,7 +6,7 @@
 #    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/29 09:16:15 by inikelsk         ###   ########.fr        #
+#    Updated: 2025/10/30 13:52:19 by inikelsk         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -32,7 +32,6 @@ SRCDIR = src
 INCDIR = include
 OBJDIR = obj
 LIBFTDIR = libft
-PARSERDIR = Parsing_Itan
 
 # **************************************************************************** #
 #                              SOURCE FILES                                    #
@@ -61,7 +60,6 @@ BUILTIN_SRCS = $(SRCDIR)/builtins/builtin_dispatcher.c \
                $(SRCDIR)/builtins/exit.c
 
 # Utils sources
-# MODIFIED 1: pipeline_utils was listed in exec_srcs above but needed here; compiler complained
 UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/memory_utils.c \
              $(SRCDIR)/utils/path_resolver.c \
@@ -86,7 +84,18 @@ SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \
               $(SRCDIR)/signals/signals_child_ps2.c
 
 # Parser sources
-PARSER_SRCS = $(PARSERDIR)/parser.c
+PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
+              $(SRCDIR)/parser/build_command.c \
+              $(SRCDIR)/parser/cleanup_parser.c \
+              $(SRCDIR)/parser/create_word_token.c \
+              $(SRCDIR)/parser/expansion.c \
+              $(SRCDIR)/parser/parse_quotes.c \
+              $(SRCDIR)/parser/parse.c \
+              $(SRCDIR)/parser/pipes_parser.c \
+              $(SRCDIR)/parser/redirection.c \
+              $(SRCDIR)/parser/structs_and_tokens.c \
+              $(SRCDIR)/parser/tokenize.c \
+              $(SRCDIR)/parser/utils_parser.c
 
 # Main source
 MAIN_SRC = $(SRCDIR)/main.c
@@ -112,13 +121,13 @@ LIBFT = $(LIBFTDIR)/libft.a
 #                            COMPILATION FLAGS                                 #
 # **************************************************************************** #
 
-INCLUDES = -I$(INCDIR) -I$(LIBFTDIR)/include -I$(PARSERDIR)
+INCLUDES = -I$(INCDIR) -I$(LIBFTDIR)/include
 
 # **************************************************************************** #
 #                            HEADER DEPENDENCIES                               #
 # **************************************************************************** #
 
-HEADERS = $(INCDIR)/minishell.h
+HEADERS = $(INCDIR)/minishell.h $(INCDIR)/parser.h
 
 # **************************************************************************** #
 #                                 BUILD RULES                                  #

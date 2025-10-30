@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   heredoc_expand.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/22 18:59:01 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/22 21:34:37 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 13:51:56 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -41,7 +41,7 @@ static int	expand_exit_status(size_t *j, char **buf, t_shell *shell)
  * @param shell: Shell state
  * @return: 0 on success, -1 on malloc failure
  */
-static int	expand_variable(const char *str, size_t *j, char **buf,
+static int	hd_expand_variable(const char *str, size_t *j, char **buf,
 							t_shell *shell)
 {
 	char	*varname;
@@ -81,7 +81,7 @@ static int	hd_expand_dollar(const char *str, size_t *j,
 	if (str[i] == '?')
 		return (expand_exit_status(j, buf, shell));
 	else if (ft_isalpha(str[i]) || str[i] == '_')
-		return (expand_variable(str, j, buf, shell));
+		return (hd_expand_variable(str, j, buf, shell));
 	else
 	{
 		if (hd_append_char(buf, '$') != 0)
