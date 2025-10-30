@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   libft.h                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/24 16:08:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 17:20:33 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:08:27 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,7 @@ int		ft_isalpha(int c);
 int		ft_isascii(int c);
 int		ft_isdigit(int c);
 int		ft_isprint(int c);
+int		ft_isspace(char c);
 
 /* Memory operations */
 void	ft_bzero(void *s, size_t n);
@@ -65,6 +66,7 @@ int		ft_tolower(int c);
 
 /* Allocation */
 void	*ft_calloc(size_t count, size_t size);
+void	*ft_realloc(void *ptr, size_t size);
 char	*ft_strdup(const char *s1);
 
 /*

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: acossari <acossari@student.42.fr>          +#+  +:+       +#+         #
+#    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/04/24 16:21:57 by acossari          #+#    #+#              #
-#    Updated: 2025/10/21 17:43:31 by acossari         ###   ########.fr        #
+#    Updated: 2025/10/30 15:45:26 by inikelsk         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -31,7 +31,7 @@ SRCS	=	src/ft_isalpha.c src/ft_isdigit.c src/ft_isalnum.c src/ft_isascii.c \
 	src/ft_atoi.c src/ft_calloc.c src/ft_strdup.c src/ft_substr.c \
 	src/ft_strjoin.c src/ft_strtrim.c src/ft_split.c src/ft_itoa.c \
 	src/ft_strmapi.c src/ft_striteri.c src/ft_putchar_fd.c src/ft_putstr_fd.c \
-	src/ft_putendl_fd.c src/ft_putnbr_fd.c \
+	src/ft_putendl_fd.c src/ft_putnbr_fd.c src/ft_isspace.c src/ft_realloc.c \
 	src/get_next_line/ft_get_next_line.c src/get_next_line/ft_get_next_line_utils.c \
 
 # Object files (.o) for mandatory sources

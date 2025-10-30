@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 10:47:02 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:06:54 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ static int	handle_pipe(const char *line, size_t *i, t_tok_context *ctx)
 	status = create_token_pipe(line, i, &ctx->list);
 	if (status != 0)
 	{
-		*(ctx->error) = strdup("malloc failure");									// TODO: switch to ft_version
+		*(ctx->error) = ft_strdup("malloc failure");
 		free_tokens(ctx->list.head);
 		return (-1);
 	}
@@ -36,9 +36,9 @@ static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 	if (ret_value != 0)
 	{
 		if (ret_value == -1)
-			*(ctx->error) = strdup("malloc failure");								// TODO: switch to ft_version
+			*(ctx->error) = ft_strdup("malloc failure");
 		else
-			*(ctx->error) = strdup("syntax error near unexpected redirection token"); // TODO: switch to ft_version
+			*(ctx->error) = ft_strdup("syntax error near unexpected redirection token");
 		free_tokens(ctx->list.head);
 		return (-1);
 	}
@@ -56,7 +56,7 @@ static int	handle_word(const char *line, size_t *i, t_tok_context *ctx)
 		status = create_token_quote_or_word(line, i, &ctx->list, ctx->shell);
 	if (status != 0)
 	{
-		*(ctx->error) = strdup("parse error in word/quote");						// TODO: switch to ft_version
+		*(ctx->error) = ft_strdup("parse error in word/quote");
 		free_tokens(ctx->list.head);
 		return (-1);
 	}
@@ -105,14 +105,14 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 	init_tok_context(&ctx, shell, error, &i);
 	while (line[i] != '\0')
 	{
-		if (isspace((unsigned char)line[i]))										// TODO: switch to ft_version
+		if (ft_isspace((unsigned char)line[i]))
 		{
 			i++;
 			continue ;
 		}
 		if (line[i] == '\\' || line[i] == ';')
 		{
-			*error = strdup("Unsupported escape or special character");				// TODO: switch to ft_version
+			*error = ft_strdup("Unsupported escape or special character");
 			return (free_tokens(ctx.list.head), NULL);
 		}
 		status = handle_valid_token(line, &i, &ctx);

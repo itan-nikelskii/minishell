@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:08:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:20:05 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:42:51 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -28,9 +28,9 @@ char	*expand_variable(const char *s, size_t index, size_t *j, char **envp)
 		return (NULL);
 	value = get_env_value(name, envp);
 	if (value)
-		result = strdup(value);				// TODO: switch to the ft_ version later
+		result = ft_strdup(value);
 	else
-		result = strdup("");				// TODO: switch to the ft_ version later
+		result = ft_strdup("");
 	free(name);
 	*j = index;
 	return (result);
@@ -50,7 +50,7 @@ int	expand_dollar(const char *s, size_t *j, t_dyn_buf *buf, t_shell *shell)
 			return (-1);
 		*j = index + 1;
 	}
-	else if (isalpha((unsigned char)s[index]) || s[index] == '_')		// TODO: switch to the ft_ version later
+	else if (ft_isalpha((unsigned char)s[index]) || s[index] == '_')
 	{
 		expanded = expand_variable(s, index, j, shell->envp);
 		if (!expanded)

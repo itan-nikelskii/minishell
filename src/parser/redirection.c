@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:14:24 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 09:20:39 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:06:47 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,7 +37,7 @@ static bool	is_invalid_redir_sequence(const char *line, size_t i)
 		return (true);
 	if ((this == '<' && next == '>') || (this == '>' && next == '<'))
 		return (true);
-	while (isspace(line[j]))											// TODO: change to ft_ version
+	while (ft_isspace(line[j]))
 		j++;
 	if (line[j] == '<' || line[j] == '>')
 		return (true);
@@ -57,16 +57,16 @@ int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 	if (line[*i] == '<')
 	{
 		if (line[*i + 1] && line[*i + 1] == '<')
-			token = new_token(TOKEN_HEREDOC, strdup("<<"));			// TODO: switch to the ft_ version later
+			token = new_token(TOKEN_HEREDOC, ft_strdup("<<"));
 		else
-			token = new_token(TOKEN_REDIR_IN, strdup("<"));			// TODO: switch to the ft_ version later
+			token = new_token(TOKEN_REDIR_IN, ft_strdup("<"));
 	}
 	else 	// if (line[*i] == '>')
 	{
 		if (line[*i + 1] && line[*i + 1] == '>')
-			token = new_token(TOKEN_REDIR_APPEND, strdup(">>"));	// TODO: switch to the ft_ version later
+			token = new_token(TOKEN_REDIR_APPEND, ft_strdup(">>"));
 		else
-			token = new_token(TOKEN_REDIR_OUT, strdup(">"));		// TODO: switch to the ft_ version later
+			token = new_token(TOKEN_REDIR_OUT, ft_strdup(">"));
 	}
 	if (line[*i + 1] && (line[*i + 1] == '<' || line[*i + 1] == '>'))
 		*i += 2;
@@ -93,7 +93,7 @@ int	consume_redirection_target(t_token *token, t_command *cmd)
 	token = token->next;	// advance to skip the actual redirection token and get to target
 	if (token->type != TOKEN_WORD)
 		return (-1);
-	target = strdup(token->text);								// TODO: turn into ft_ version
+	target = ft_strdup(token->text);
 	if (!target)
 		return (-1);
 	redir = new_redir(redir_type, target, token->was_quoted);

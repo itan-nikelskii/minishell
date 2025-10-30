@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:25:18 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:20:05 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 14:56:06 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,12 +21,12 @@ t_dyn_buf	*dynbuf_create_and_init(void)
 	dynamic_buf = malloc(sizeof(t_dyn_buf));
 	if (!dynamic_buf)
 		return (NULL);
-	dynamic_buf->buf = malloc(64);	// FIXME: random magic number, don't know what's best here
+	dynamic_buf->buf = malloc(64);
 	if (!dynamic_buf->buf)
 		return (free(dynamic_buf), NULL);
 	dynamic_buf->len = 0;
-	dynamic_buf->cap = 64;			// FIXME: see the fixme above
-	dynamic_buf->buf[0] = '\0';		// null-terminate right away for good measure
+	dynamic_buf->cap = 64;
+	dynamic_buf->buf[0] = '\0';
 	return (dynamic_buf);
 }
 
@@ -47,9 +47,9 @@ int	ensure_buffer_capacity(t_dyn_buf *dynamic_buf, size_t need)
 	{
 		dynamic_buf->cap *= 2;
 		if (dynamic_buf->cap == 0)
-			dynamic_buf->cap = 64;							// FIXME: fix magic numbers
+			dynamic_buf->cap = 64;
 	}
-	tmp = realloc(dynamic_buf->buf, dynamic_buf->cap);		// TODO: switch to the ft_ version later
+	tmp = ft_realloc(dynamic_buf->buf, dynamic_buf->cap);
 	if (!tmp)
 		return (-1);
 	dynamic_buf->buf = tmp;

@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 10:54:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:20:05 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:07:13 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,7 +115,7 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token_list *list,
 	if (!buf)
 		return (-1);
 	had_quote = false;
-	while (line[*i] != '\0' && !isspace((unsigned char)line[*i]) 
+	while (line[*i] != '\0' && !ft_isspace((unsigned char)line[*i]) 
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;

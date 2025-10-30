@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 11:42:23 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:05:36 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 14:58:18 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -64,7 +64,7 @@ static int	handle_parse_error(t_parse_result *result, char *tok_err,
 	if (tok_err)
 		result->error = tok_err;
 	else if (!result->error && fallback != NULL)
-		result->error = strdup(fallback);			// TODO: switch to ft_ version
+		result->error = ft_strdup(fallback);
 	if (tokens)
 		free_tokens(tokens);
 	return (0);

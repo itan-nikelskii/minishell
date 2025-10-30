@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:02:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:20:05 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:07:02 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ char	*strdup_range(const char *s, size_t from, size_t to)
 	out = malloc(len + 1);
 	if (!out)
 		return (NULL);
-	memcpy(out, s + from, len);			// TODO: switch to the ft_ version later
+	ft_memcpy(out, s + from, len);
 	out[len] = '\0';
 	return (out);
 }
@@ -30,7 +30,7 @@ char	*strdup_range(const char *s, size_t from, size_t to)
 /* If c is a word char (non-meta or space), return 1; otherwise, return 0. */
 int	is_word_char(char c)
 {
-	if (isspace((unsigned char)c))		// TODO: switch to the ft_ version later
+	if (ft_isspace((unsigned char)c))
 		return (0);
 	if (c == '|' || c == '<' || c == '>' || c == '\'' || c == '"')
 		return (0);
@@ -57,11 +57,11 @@ int	append_str(t_dyn_buf *dynamic_buf, const char *s)
 	size_t	s_len;
 	int		status;
 
-	s_len = strlen(s);					// TODO: switch to the ft_ version later
+	s_len = ft_strlen(s);
 	status = ensure_buffer_capacity(dynamic_buf, dynamic_buf->len + s_len + 1);
 	if (status != 0)
 		return (-1);
-	memcpy(dynamic_buf->buf + dynamic_buf->len, s, s_len);		// TODO: switch to the ft_ version later
+	ft_memcpy(dynamic_buf->buf + dynamic_buf->len, s, s_len);
 	dynamic_buf->len += s_len;
 	dynamic_buf->buf[dynamic_buf->len] = '\0';
 	return (0);
