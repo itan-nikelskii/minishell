@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:20:59 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 11:18:45 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -40,7 +40,7 @@ static int	add_word_to_cmd_argv(t_command *cmd, const char *word,
 }
 
 /* Initialize a t_command with NULLs and return it, or just NULL on failure. */
-static t_command *init_t_command(t_token *token)
+static t_command	*init_t_command(t_token *token)
 {
 	t_command	*cmd;
 	size_t		word_count;
@@ -81,7 +81,6 @@ static int	handle_redirection_token(t_token **ptoken, t_command *cmd,
 	*ptoken = token->next;
 	return (0);
 }
-
 
 /* Build a single command from tokens up to pipe; differentiate between
 words and redirections with their targets; return the built command

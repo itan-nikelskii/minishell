@@ -6,31 +6,32 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:28:53 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:10:17 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 12:59:10 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/parser.h"
 
 /* Validate pipe usage in the token list:
-	- reject a leading pipe (e.g. "| echo");
-	- reject consecutive pipes (e.g. "echo || echo" or "echo | | echo").
-On success, return 0; on error, return -1 and set the *error message. */
+	- reject a leading pipe (e.g. "| echo"; second if);
+	- reject consecutive pipes (e.g. "echo || echo" or "echo | | echo"; while).
+   On success, return 0; on error, return -1 and set the *error message. */
 static int	validate_pipes(t_token *tokens, char **error)
 {
-	t_token *current;
+	t_token	*current;
 
 	if (tokens == NULL)
 		return (0);
-	if (tokens->type == TOKEN_PIPE)		// leading pipe case
+	if (tokens->type == TOKEN_PIPE)
 	{
 		*error = strdup("Syntax error: unexpected '|'");
 		return (-1);
 	}
 	current = tokens;
-	while (current)							// consecutive pipe (anywhere) case
+	while (current)
 	{
-		if (current->type == TOKEN_PIPE && current->next && current->next->type == TOKEN_PIPE)
+		if (current->type == TOKEN_PIPE && current->next && current->next->type
+			== TOKEN_PIPE)
 		{
 			*error = strdup("Syntax error: unexpected '||'");
 			return (-1);
@@ -41,8 +42,8 @@ static int	validate_pipes(t_token *tokens, char **error)
 }
 
 /* If the last token is a single pipe, unlink and free that token, set 
-*incomplete = true and return 0. If no trailing pipe found, set *incomplete 
-= false and return 0. Return -1 if either parameter was NULL. 
+   *incomplete = true and return 0. If no trailing pipe found, set *incomplete 
+   = false and return 0. Return -1 if either parameter was NULL. 
 
 NOTE on removing the single trailing pipe token from the list: a single trailing
 '|' means the user started a pipeline but didn't finish the right-hand command. 
@@ -53,24 +54,24 @@ after the pipe. After the execution layer prompts and gathers more input, the
 combined input can be re-parsed. */
 static int	strip_trailing_pipe(t_token **tokens, bool *incomplete)
 {
-	t_token *current;
-	t_token *previous;
+	t_token	*current;
+	t_token	*previous;
 
 	*incomplete = false;
 	previous = NULL;
 	current = *tokens;
-	while (current && current->next)	// find last node
+	while (current && current->next)
 	{
 		previous = current;
 		current = current->next;
 	}
 	if (current && current->type == TOKEN_PIPE)
 	{
-		*incomplete = true;		// single trailing pipe found -> unlink and free current
-		if (previous)				
+		*incomplete = true;
+		if (previous)
 			previous->next = NULL;
 		else
-			*tokens = NULL;		// defensive; leading pipe should have been rejected earlier (TODO: double check)
+			*tokens = NULL;
 		free(current->text);
 		free(current);
 	}
@@ -91,7 +92,7 @@ int	deal_with_pipes(t_token **tokens, char **error, bool *incomplete)
 		return (0);
 	has_pipe = false;
 	current = *tokens;
-	while (current)			// scan for any pipe token first; skip pipe-related logic if none
+	while (current)
 	{
 		if (current->type == TOKEN_PIPE)
 		{
@@ -102,8 +103,8 @@ int	deal_with_pipes(t_token **tokens, char **error, bool *incomplete)
 	}
 	if (!has_pipe)
 		return (0);
-	if (validate_pipes(*tokens, error) != 0)		// validate pipe usage (leading/double)
+	if (validate_pipes(*tokens, error) != 0)
 		return (-1);
-	strip_trailing_pipe(tokens, incomplete);		// strip single trailing pipe if present and set incomplete flag
+	strip_trailing_pipe(tokens, incomplete);
 	return (0);
 }

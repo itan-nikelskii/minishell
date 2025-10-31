@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:36:27 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:58:25 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 13:20:11 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -139,9 +139,7 @@ void		init_tok_context(t_tok_context *ctx, t_shell *shell, char **error,
 t_dyn_buf	*dynbuf_create_and_init(void);
 int			ensure_buffer_capacity(t_dyn_buf *dynamic_buf, size_t need);
 
-/* Expansion helpers */
-char		*expand_variable(const char *s, size_t index, size_t *j,
-				char **envp);
+/* Expansion helper */
 int			expand_dollar(const char *s, size_t *j, t_dyn_buf *buf,
 				t_shell *shell);
 
@@ -157,7 +155,7 @@ int			deal_with_pipes(t_token **tokens, char **error, bool *incomplete);
 t_redir		*new_redir(t_token_type type, char *target, bool was_quoted);
 t_token		*new_token(t_token_type type, char *text);
 int			append_token(t_token_list *list, t_token *node);
-int			create_token_pipe(const char *line, size_t *i, t_token_list *list);
+int			create_token_pipe(size_t *i, t_token_list *list);
 int			create_token_redirection(const char *line, size_t *i,
 				t_token_list *list);
 int			create_token_quote_or_word(const char *line, size_t *i,

@@ -6,18 +6,18 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:06:54 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 12:45:55 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/parser.h"
 
-/* TODO: documentation */
-static int	handle_pipe(const char *line, size_t *i, t_tok_context *ctx)
+/* Create a pipe token and return 0 on success or -1 on malloc failure. */
+static int	handle_pipe(size_t *i, t_tok_context *ctx)
 {
 	int	status;
 
-	status = create_token_pipe(line, i, &ctx->list);
+	status = create_token_pipe(i, &ctx->list);
 	if (status != 0)
 	{
 		*(ctx->error) = ft_strdup("malloc failure");
@@ -27,7 +27,7 @@ static int	handle_pipe(const char *line, size_t *i, t_tok_context *ctx)
 	return (0);
 }
 
-/* TODO: documentation */
+/* Create a redirection token and return 0 on success or -1 on failure. */
 static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 {
 	int	ret_value;
@@ -38,14 +38,16 @@ static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 		if (ret_value == -1)
 			*(ctx->error) = ft_strdup("malloc failure");
 		else
-			*(ctx->error) = ft_strdup("syntax error near unexpected redirection token");
+			*(ctx->error) = ft_strdup("syntax error near unexpected "
+					"redirection token");
 		free_tokens(ctx->list.head);
 		return (-1);
 	}
 	return (0);
 }
 
-/* TODO: documentation */
+/* Create a word token, differentiate between that word being part of a command
+   or a HEREDOC delimiter. Return 0 on success or -1 on failure. */
 static int	handle_word(const char *line, size_t *i, t_tok_context *ctx)
 {
 	int	status;
@@ -73,7 +75,7 @@ static int	handle_valid_token(const char *line, size_t *i, t_tok_context *ctx)
 
 	if (line[*i] == '|')
 	{
-		status = handle_pipe(line, i, ctx);
+		status = handle_pipe(i, ctx);
 		if (status != 0)
 			return (-1);
 		return (0);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cleanup_parser.c                                   :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:32:59 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 17:08:25 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/31 11:19:06 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ void	free_commands(t_command *cmd)
 }
 
 /* Free the dynamic buffer struct. */
-void dynamic_buf_free(t_dyn_buf *dynamic_buf)
+void	dynamic_buf_free(t_dyn_buf *dynamic_buf)
 {
 	free(dynamic_buf->buf);
 	free(dynamic_buf);

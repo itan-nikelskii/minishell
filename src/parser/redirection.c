@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:14:24 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:06:47 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 12:54:25 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -61,7 +61,7 @@ int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 		else
 			token = new_token(TOKEN_REDIR_IN, ft_strdup("<"));
 	}
-	else 	// if (line[*i] == '>')
+	else
 	{
 		if (line[*i + 1] && line[*i + 1] == '>')
 			token = new_token(TOKEN_REDIR_APPEND, ft_strdup(">>"));
@@ -77,39 +77,31 @@ int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 	return (0);
 }
 
-// FIXME: too long
-/* Consume the redirection target token and attach to cmd.redirs. On success,							// DONE
-return 0. If the target doesn't exist or is not a TOKEN_WORD type, or if
-anything goes wrong with mallocs, return -1. */
+/* Consume the redirection target token and attach to cmd.redirs. On success,
+   return 0. If the target doesn't exist or is not a TOKEN_WORD type, or if
+   anything goes wrong with mallocs, return -1. */
 int	consume_redirection_target(t_token *token, t_command *cmd)
 {
 	t_token_type	redir_type;
 	char			*target;
 	t_redir			*redir;
+	t_redir			*last;
 
 	if (!token || !token->next)
 		return (-1);
 	redir_type = token->type;
-	token = token->next;	// advance to skip the actual redirection token and get to target
-	if (token->type != TOKEN_WORD)
-		return (-1);
+	token = token->next;
 	target = ft_strdup(token->text);
-	if (!target)
+	if (!target || token->type != TOKEN_WORD)
 		return (-1);
 	redir = new_redir(redir_type, target, token->was_quoted);
 	if (!redir)
-	{
-		free(target);
-		return (-1);
-	}
-	// FIX: Append to end instead of prepend to head
-	// Old: prepend created reversed list (last-typed processed first)
-	// New: append maintains correct order (last-typed processed last)
+		return (free(target), -1);
 	if (!cmd->redirs)
 		cmd->redirs = redir;
 	else
 	{
-		t_redir *last = cmd->redirs;						// FIXME: variable declaration should be on top
+		last = cmd->redirs;
 		while (last->next)
 			last = last->next;
 		last->next = redir;

@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:49:21 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 10:46:14 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 12:46:52 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,7 +53,7 @@ t_redir	*new_redir(t_token_type type, char *target, bool was_quoted)
 
 	redir = malloc(sizeof(t_redir));
 	if (!redir)
-		return NULL;
+		return (NULL);
 	redir->type = type;
 	redir->target = target;
 	redir->was_quoted = was_quoted;
@@ -63,13 +63,11 @@ t_redir	*new_redir(t_token_type type, char *target, bool was_quoted)
 }
 
 /* Handle the '|' char: create a new pipe token, append it to the token list,
-and return 0 on success or -1 on failure. */
-int	create_token_pipe(const char *line, size_t *i, t_token_list *list)			// FIXME: *line doesn't seem to be used anymore; delete?
+   and return 0 on success or -1 on failure. */
+int	create_token_pipe(size_t *i, t_token_list *list)
 {
 	t_token	*token;
 
-	// EDITED: Added (void)line to suppress unused parameter warning with -Werror
-	(void)line;
 	token = new_token(TOKEN_PIPE, strdup("|"));
 	if (!token || append_token(list, token) != 0)
 		return (-1);

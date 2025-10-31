@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 11:42:23 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 14:58:18 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 11:23:09 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -59,7 +59,7 @@ static t_command	*parse_tokens_to_commands(t_token *t, char **error)
    otherwise set fallback if result->error is not already set. Free tokens
    if provided and return 0 (parse() uses this return value). */
 static int	handle_parse_error(t_parse_result *result, char *tok_err,
-                const char *fallback, t_token *tokens)
+				const char *fallback, t_token *tokens)
 {
 	if (tok_err)
 		result->error = tok_err;
@@ -85,10 +85,12 @@ int	parse(const char *line, t_parse_result *result, t_shell *shell)
 	if (!tokens)
 		return (handle_parse_error(result, tok_err, NULL, NULL));
 	if (deal_with_pipes(&tokens, &tok_err, &result->incomplete_pipe) != 0)
-		return (handle_parse_error(result, tok_err, "Syntax error in pipe usage", tokens));
+		return (handle_parse_error(result, tok_err,
+				"Syntax error in pipe usage", tokens));
 	result->commands = parse_tokens_to_commands(tokens, &tok_err);
 	if (!result->commands && !result->incomplete_pipe)
-		return (handle_parse_error(result, tok_err, "Syntax error building commands", tokens));
+		return (handle_parse_error(result, tok_err,
+				"Syntax error building commands", tokens));
 	free_tokens(tokens);
 	return (0);
 }

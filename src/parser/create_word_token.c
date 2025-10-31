@@ -6,31 +6,32 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 10:54:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:07:13 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 11:21:41 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/parser.h"
 
-/* Handle leading $ followed by a quoted segment ($'...' or $"...'). Parse the 
- quoted segment and set *segment. Return -1 on error, 1 on parsing success. */
+/* Handle leading $ followed by a quoted segment ($'...' or $"...'). Skip the 
+   leading $; parse the quoted segment and set *segment. Return -1 on error, 
+   1 on parsing success. */
 static int	handle_dollar_prefixed_quote(const char *line, size_t *i,
-                char **segment, t_shell *shell)
+			char **segment, t_shell *shell)
 {
-    *i = *i + 1;					// skip leading $
-    if (line[*i] == '\'')
-    {
-        if (parse_single_quote(line, i, segment) != 0)
-            return (-1);
-        return (1);
-    }
-    if (line[*i] == '"')
-    {
-        if (parse_double_quote(line, i, segment, shell) != 0)
-            return (-1);
-        return (1);
-    }
-    return (-1);
+	*i = *i + 1;
+	if (line[*i] == '\'')
+	{
+		if (parse_single_quote(line, i, segment) != 0)
+			return (-1);
+		return (1);
+	}
+	if (line[*i] == '"')
+	{
+		if (parse_double_quote(line, i, segment, shell) != 0)
+			return (-1);
+		return (1);
+	}
+	return (-1);
 }
 
 /* Parse one segment starting at line[*i]. Handle dollar-prefixed quoted, 
@@ -86,16 +87,16 @@ static int	finalize_token_from_buf(t_dyn_buf *buf, bool had_quote,
 	token = new_token(TOKEN_WORD, buf->buf);
 	if (!token)
 	{
-        dynamic_buf_free(buf);
-        return (-1);
+		dynamic_buf_free(buf);
+		return (-1);
 	}
 	token->was_quoted = had_quote;
 	free(buf);
 	if (append_token(list, token) != 0)
 	{
-        free(token->text);
-        free(token);
-        return (-1);
+		free(token->text);
+		free(token);
+		return (-1);
 	}
 	return (0);
 }
@@ -107,15 +108,15 @@ int	create_token_quote_or_word(const char *line, size_t *i, t_token_list *list,
 		t_shell *shell)
 {
 	t_dyn_buf	*buf;
-	bool			had_quote;
-	char			*segment;
-	int				seg_ret;
+	bool		had_quote;
+	char		*segment;
+	int			seg_ret;
 
 	buf = dynbuf_create_and_init();
 	if (!buf)
 		return (-1);
 	had_quote = false;
-	while (line[*i] != '\0' && !ft_isspace((unsigned char)line[*i]) 
+	while (line[*i] != '\0' && !ft_isspace((unsigned char)line[*i])
 		&& line[*i] != '|' && line[*i] != '<' && line[*i] != '>')
 	{
 		segment = NULL;

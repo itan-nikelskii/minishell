@@ -3,27 +3,14 @@
 /*                                                        :::      ::::::::   */
 /*   redirections.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 09:28:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 23:50:20 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/31 13:33:16 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-/**
- * Update fd safely - close previous if not stdin/stdout, then assign new
- * @param fd_ptr Pointer to fd to update (in_fd or out_fd)
- * @param new_fd New file descriptor to assign
- * @param std_fd Standard fd to compare against (STDIN_FILENO or STDOUT_FILENO)
- */
-static void	update_fd(int *fd_ptr, int new_fd, int std_fd)
-{
-	if (*fd_ptr != std_fd)
-		close(*fd_ptr);
-	*fd_ptr = new_fd;
-}
 
 /**
  * Open heredoc file and unlink

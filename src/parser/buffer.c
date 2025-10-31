@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:25:18 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 14:56:06 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 11:18:16 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ return a pointer to it; on failure, return NULL. */
 t_dyn_buf	*dynbuf_create_and_init(void)
 {
 	t_dyn_buf	*dynamic_buf;
-	
+
 	dynamic_buf = malloc(sizeof(t_dyn_buf));
 	if (!dynamic_buf)
 		return (NULL);
@@ -55,4 +55,3 @@ int	ensure_buffer_capacity(t_dyn_buf *dynamic_buf, size_t need)
 	dynamic_buf->buf = tmp;
 	return (0);
 }
-

@@ -6,14 +6,14 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:12:02 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 13:20:05 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/31 13:01:40 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/parser.h"
 
 /* Parse single quoted literal (no expansion) and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
+   return 0 on sucess, -1 if something went wrong. */
 int	parse_single_quote(const char *s, size_t *i, char **out)
 {
 	size_t	start;
@@ -34,11 +34,12 @@ int	parse_single_quote(const char *s, size_t *i, char **out)
 	return (0);
 }
 
-/* Parse double-quoted string, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
+/* Parse double-quoted string, allowing for $ expansion, and store it in *out.
+   Don't expand $ in heredoc delimiters (shell == NULL).
+   Return 0 on sucess, -1 if something went wrong. */
 int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 {
-	size_t			j;
+	size_t		j;
 	t_dyn_buf	*dynamic_buf;
 
 	dynamic_buf = dynbuf_create_and_init();
@@ -47,7 +48,6 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i + 1;
 	while (s[j] != '\0' && s[j] != '"')
 	{
-		// TODO: add to documentation: FIX ISSUE #20 - Don't expand $ in heredoc delimiters (shell == NULL)
 		if (s[j] == '$' && shell != NULL)
 		{
 			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
@@ -61,16 +61,17 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	if (s[j] != '"')
 		return (dynamic_buf_free(dynamic_buf), -1);
 	*out = dynamic_buf->buf;
-	free(dynamic_buf);  // ISSUE 23: Free struct but keep buf (returned via *out)	// TODO: put it into return to save lines
+	free(dynamic_buf);
 	*i = j + 1;
 	return (0);
 }
 
-/* Parse an unquoted word, allowing for $ expansion, and store it in *out;
-return 0 on sucess, -1 if something went wrong. */
+/* Parse an unquoted word, allowing for $ expansion, and store it in *out.
+   Don't expand $ in heredoc delimiters (shell == NULL).
+   Return 0 on sucess, -1 if something went wrong. */
 int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 {
-	size_t			j;
+	size_t		j;
 	t_dyn_buf	*dynamic_buf;
 
 	dynamic_buf = dynbuf_create_and_init();
@@ -79,7 +80,6 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i;
 	while (s[j] != '\0' && is_word_char(s[j]))
 	{
-		// TODO: add to documentation: Don't expand $ in heredoc delimiters (shell == NULL)
 		if (s[j] == '$' && shell != NULL)
 		{
 			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
@@ -91,7 +91,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 		j++;
 	}
 	*out = dynamic_buf->buf;
-	free(dynamic_buf);  // ISSUE 23: Free struct but keep buf (returned via *out)
+	free(dynamic_buf);
 	*i = j;
 	return (0);
 }
