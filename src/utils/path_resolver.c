@@ -109,7 +109,7 @@ static char	*find_in_path(const char *cmd, char **env_paths)
 /**
  * Resolve command path
  * Handles three cases:
- * 1. Command with '/' → use as-is (absolute/relative path)
+ * 1. Command with '/' → return as-is (let execve handle errors)
  * 2. Command without '/' → search in PATH
  * 3. PATH not found or command not in PATH → return NULL
  * @param command Command to resolve
@@ -125,11 +125,7 @@ char	*resolve_path(char *command, char **envp)
 	if (!command || !*command)
 		return (NULL);
 	if (ft_strchr(command, '/'))
-	{
-		if (access(command, X_OK) == 0)
-			return (command);
-		return (NULL);
-	}
+		return (command);
 	env_paths = get_env_paths(envp);
 	if (!env_paths)
 	{

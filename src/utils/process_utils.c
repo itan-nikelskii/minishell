@@ -18,7 +18,8 @@
  */
 int	map_execve_errno(void)
 {
-	if (errno == EACCES || errno == ENOEXEC || errno == EISDIR)
+	if (errno == EACCES || errno == ENOEXEC || errno == EISDIR
+		|| errno == ENOTDIR)
 		return (CMD_NOT_EXECUTABLE);
 	if (errno == ENOENT)
 		return (CMD_NOT_FOUND);
