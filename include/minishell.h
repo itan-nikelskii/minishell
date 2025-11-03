@@ -69,9 +69,8 @@ int		execute_command(t_command *cmd, t_shell *shell);
 /* Single command executor */
 int		execute_single_command(t_command *cmd, t_shell *shell);
 
-/* Pipeline executors */
+/* Pipeline executor (handles 2+ commands) */
 int		execute_pipeline(t_command *cmd_list, t_shell *shell);
-int		execute_pipeline_multi(t_command *cmd_list, t_shell *shell);
 
 /* Pipeline utils */
 void	cleanup_pipes(int pipefd[2]);

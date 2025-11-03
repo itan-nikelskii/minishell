@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   path_resolver.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:51:28 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/15 00:06:31 by acossari         ###   ########.fr       */
+/*   Updated: 2025/10/30 15:11:46 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -114,7 +114,8 @@ static char	*find_in_path(const char *cmd, char **env_paths)
  * 3. PATH not found or command not in PATH → return NULL
  * @param command Command to resolve
  * @param envp Environment variables
- * @return Full path to executable, or NULL if not found
+ * @return Full path to executable, with fallback to "./command"
+ *         or NULL if not found
  */
 char	*resolve_path(char *command, char **envp)
 {
@@ -131,7 +132,15 @@ char	*resolve_path(char *command, char **envp)
 	}
 	env_paths = get_env_paths(envp);
 	if (!env_paths)
+	{
+		path = build_full_path(".", command);
+		if (!path)
+			return (NULL);
+		if (access(path, X_OK) == 0)
+			return (path);
+		free(path);
 		return (NULL);
+	}
 	path = find_in_path(command, env_paths);
 	free_array(env_paths);
 	return (path);

@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 15:04:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,8 @@ static int	prepare_all_heredocs(t_command *cmd_list, t_shell *shell)
 	while (cmd)
 	{
 		result = prepare_heredocs(cmd, shell);
+		if (result == -2)
+			return (-2);
 		if (result != 0)
 			return (result);
 		cmd = cmd->next;
@@ -36,7 +38,7 @@ static int	prepare_all_heredocs(t_command *cmd_list, t_shell *shell)
 
 /**
  * Main execution function
- * Decides if command is single, 2-command pipeline, or multi-command pipeline
+ * Decides if command is single or pipeline
  * @param cmd Command list to execute
  * @param shell Shell state
  * @return Exit status of last command
@@ -50,6 +52,11 @@ int	execute_command(t_command *cmd, t_shell *shell)
 	if (!cmd || !shell)
 		return (1);
 	result = prepare_all_heredocs(cmd, shell);
+	if (result == -2)
+	{
+		shell->last_exit_status = 2;
+		exit(2);
+	}
 	if (result == 130)
 		return (shell->last_exit_status = 130);
 	if (result != 0)
@@ -57,16 +64,15 @@ int	execute_command(t_command *cmd, t_shell *shell)
 	cmd_count = count_commands(cmd);
 	if (cmd_count == 1)
 		exit_status = execute_single_command(cmd, shell);
-	else if (cmd_count == 2)
-		exit_status = execute_pipeline(cmd, shell);
 	else
-		exit_status = execute_pipeline_multi(cmd, shell);
+		exit_status = execute_pipeline(cmd, shell);
 	shell->last_exit_status = exit_status;
 	return (exit_status);
 }
 
 /**
  * Execute builtin with redirections
+ * Also handles redirections-only commands (no argv)
  * @param cmd Command to execute
  * @param shell Shell state
  * @return Exit status
@@ -85,24 +91,27 @@ static int	exec_builtin_with_redir(t_command *cmd, t_shell *shell)
 	}
 	if (save_std_fds(shell) == -1)
 	{
-		if (in_fd != STDIN_FILENO)
-			close(in_fd);
-		if (out_fd != STDOUT_FILENO)
-			close(out_fd);
+		close_redir_fds(in_fd, out_fd);
 		return (1);
 	}
 	if (apply_redirections(in_fd, out_fd) == -1)
 		return (restore_std_fds(shell), 1);
-	exit_status = execute_builtin(cmd, shell);
+	if (cmd->argv && cmd->argv[0])
+		exit_status = execute_builtin(cmd, shell);
+	else
+		exit_status = 0;
 	restore_std_fds(shell);
 	return (exit_status);
 }
 
 /**
  * Executes a single command (no pipeline)
- * Distinguishes between builtins and external commands
+ * Handles:
+ *   - Builtins with/without redirections
+ *   - External commands
+ *   - Redirections-only (no command, e.g., >file)
  *
- * @param cmd Command to execute
+ * @param cmd Command to execute (argv may be NULL for redirections-only)
  * @param shell Shell state
  * @return Exit status
  */
@@ -110,8 +119,14 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 {
 	int	exit_status;
 
-	if (!cmd || !cmd->argv || !cmd->argv[0])
+	if (!cmd)
 		return (0);
+	if (!cmd->argv || !cmd->argv[0])
+	{
+		if (cmd->redirs)
+			return (exec_builtin_with_redir(cmd, shell));
+		return (0);
+	}
 	if (is_builtin(cmd->argv[0]))
 	{
 		if (cmd->redirs)
@@ -122,4 +137,39 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 	else
 		exit_status = execute_external(cmd, shell);
 	return (exit_status);
+}
+
+/**
+ * Executes an external command using fork + execve
+ *
+ * Process flow:
+ * 1. PARENT: fork() creates child process
+ * 2. CHILD: exec_child_single() handles redirections and execve
+ * 3. PARENT: waitpid() waits for child → returns exit status
+ *
+ * @param cmd Command to execute
+ * @param shell Shell state
+ * @return Exit status of the command
+ */
+int	execute_external(t_command *cmd, t_shell *shell)
+{
+	pid_t	pid;
+	int		status;
+
+	setup_parent_wait_signals();
+	pid = fork();
+	if (pid == -1)
+	{
+		setup_parent_ps1_signals();
+		print_perror("fork", NULL);
+		return (EXIT_FAILURE);
+	}
+	if (pid == 0)
+		exec_child_single(cmd, shell);
+	waitpid(pid, &status, 0);
+	if (isatty(STDIN_FILENO) && WIFSIGNALED(status)
+		&& WTERMSIG(status) == SIGINT)
+		write(STDOUT_FILENO, "\n", 1);
+	setup_parent_ps1_signals();
+	return (get_child_exit_status(status));
 }

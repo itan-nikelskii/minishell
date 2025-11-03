@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 19:20:00 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/10/28 22:14:51 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 14:45:25 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -128,6 +128,8 @@ int	prepare_heredocs(t_command *cmd, t_shell *shell)
 	char	tmp_path[256];
 	int		result;
 
+	if (too_many_heredocs(cmd))
+		return (-2);
 	redir = cmd->redirs;
 	while (redir)
 	{

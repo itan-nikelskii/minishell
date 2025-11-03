@@ -49,6 +49,7 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 /**
  * Unified function to execute command in child process
  * Handles redirections, builtins (if allowed), and external commands
+ * Also handles redirections-only commands (no argv)
  * This function never returns - it always exits
  * Called from fork in already-forked child (pipe dup2 already done by caller)
  * @param cmd Command to execute
@@ -76,6 +77,8 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 		if (apply_redirections(in_fd, out_fd) == -1)
 			exit(EXIT_FAILURE);
 	}
+	if (!cmd->argv || !cmd->argv[0])
+		exit(0);
 	if (allow_builtin && is_builtin(cmd->argv[0]))
 		exit(execute_builtin(cmd, shell));
 	execve_or_die(cmd, shell);

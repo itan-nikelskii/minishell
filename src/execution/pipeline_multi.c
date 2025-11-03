@@ -94,12 +94,12 @@ static int	fork_all_children(t_pipe_ctx *ctx, t_command *cmd_list)
 }
 
 /**
- * Execute a pipeline with multiple commands
+ * Execute a pipeline with 2 or more commands
  * @param cmd_list List of commands in the pipeline
  * @param shell Shell state
  * @return Exit status of the last command
  */
-int	execute_pipeline_multi(t_command *cmd_list, t_shell *shell)
+int	execute_pipeline(t_command *cmd_list, t_shell *shell)
 {
 	t_pipe_ctx	ctx;
 	int			result;

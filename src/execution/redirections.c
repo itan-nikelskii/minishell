@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   redirections.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 09:28:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/31 13:33:16 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/10/30 14:07:14 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -51,7 +51,7 @@ static int	process_redir(t_redir *redir, int *in_fd, int *out_fd)
 	else if (redir->type == TOKEN_REDIR_APPEND)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
 	if (fd == -1 && redir->type != TOKEN_HEREDOC)
-		print_perror("minishell", redir->target);
+		print_perror(NULL, redir->target);
 	if (fd == -1)
 		return (-1);
 	if (redir->type == TOKEN_HEREDOC || redir->type == TOKEN_REDIR_IN)

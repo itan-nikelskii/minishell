@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 10:37:18 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 20:01:56 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/10/30 14:35:09 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -79,4 +79,30 @@ char	*read_heredoc_line(t_shell *shell)
 	if (len > 0 && line[len - 1] == '\n')
 		line[len - 1] = '\0';
 	return (line);
+}
+
+/**
+ * Check if command has too many heredocs (>16)
+ * @param cmd: Command to check
+ * @return true if too many heredocs, false otherwise
+ */
+bool	too_many_heredocs(t_command *cmd)
+{
+	t_redir	*redir;
+	int		count;
+
+	count = 0;
+	redir = cmd->redirs;
+	while (redir)
+	{
+		if (redir->type == TOKEN_HEREDOC)
+			count++;
+		redir = redir->next;
+		if (count > 16)
+		{
+			print_error(NULL, "maximum here-document count exceeded");
+			return (true);
+		}
+	}
+	return (false);
 }
