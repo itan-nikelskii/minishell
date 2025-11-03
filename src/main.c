@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 19:13:07 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/03 11:49:50 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,10 @@ static void	process_line(char *line, t_shell *shell)
 	result.error = NULL;
 	result.incomplete_pipe = false;
 	if (parse(line, &result, shell) != 0)
-		return (print_error(NULL, "internal parse error"), free(line));
+		return (print_error(NULL, "internal parse error"), free_commands(result.commands), free(line));	// MODIFIED: added free_commands (even if it's NULL, the implementation of free_commands makes it safe)
 	if (result.error)
 		return (print_error(NULL, result.error), free(result.error),
-			shell->last_exit_status = 2, free(line));
+			shell->last_exit_status = 2, free_commands(result.commands), free(line));					// MODIFIED: same with free_commands as above
 	if (result.incomplete_pipe)
 	{
 		line = process_continuation(line, shell);

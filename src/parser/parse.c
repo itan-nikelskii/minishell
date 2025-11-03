@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 11:42:23 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 11:23:09 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/03 12:04:07 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,7 +47,11 @@ static t_command	*parse_tokens_to_commands(t_token *t, char **error)
 		}
 		cmd = build_command_from_tokens(&t, error);
 		if (!cmd)
+		{
+			if (head)
+				free_commands(head);				// MODIFIED: free any commands already built before returning
 			return (NULL);
+		}
 		append_command(&head, &tail, cmd);
 		if (t != NULL && t->type == TOKEN_PIPE)
 			t = t->next;

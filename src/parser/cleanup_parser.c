@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:32:59 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 11:19:06 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/03 12:15:00 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,7 +50,8 @@ static void	free_redirs(t_redir *redir)
 	while (redir)
 	{
 		next_redir = redir->next;
-		free(redir->target);
+		if (redir->target)
+			free(redir->target);
 		if (redir->hd_path)
 			free(redir->hd_path);
 		free(redir);
