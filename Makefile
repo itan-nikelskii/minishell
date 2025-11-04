@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
+#    By: acossari <acossari@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/11/04 10:01:34 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/11/04 12:53:04 by acossari         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -23,6 +23,12 @@ NAME = minishell
 CC = cc
 CFLAGS = -Wall -Wextra -Werror
 LDFLAGS = -lreadline
+
+# AddressSanitizer support (use 'make asan' or 'make SANITIZE=1')
+ifdef SANITIZE
+    CFLAGS += -fsanitize=address -g3
+    LDFLAGS += -fsanitize=address
+endif
 
 # **************************************************************************** #
 #                               DIRECTORIES                                    #
@@ -134,6 +140,11 @@ HEADERS = $(INCDIR)/minishell.h $(INCDIR)/parser.h
 # Default target
 all: $(LIBFT) $(NAME)
 
+# Build with AddressSanitizer
+asan:
+	$(MAKE) fclean
+	$(MAKE) all SANITIZE=1
+
 # Build minishell executable
 $(NAME): $(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBFT) $(LDFLAGS) -o $(NAME)
@@ -176,4 +187,4 @@ re: fclean all
 #                                 PHONY TARGETS                                #
 # **************************************************************************** #
 
-.PHONY: all clean fclean re
+.PHONY: all clean fclean re asan
