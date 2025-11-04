@@ -6,7 +6,7 @@
 #    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/10/30 17:03:23 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/11/04 10:01:34 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -40,10 +40,9 @@ LIBFTDIR = libft
 # Execution sources
 EXEC_SRCS = $(SRCDIR)/execution/executor.c \
             $(SRCDIR)/execution/redirections.c \
-            $(SRCDIR)/execution/redirection_backup.c \
-            $(SRCDIR)/execution/pipeline_multi.c \
+            $(SRCDIR)/execution/redirections_backup.c \
+            $(SRCDIR)/execution/pipeline.c \
             $(SRCDIR)/execution/heredoc_expand.c \
-            $(SRCDIR)/execution/heredoc_expand_utils.c \
             $(SRCDIR)/execution/heredoc_prepare.c \
             $(SRCDIR)/execution/continuation.c
 
@@ -70,8 +69,8 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/array_utils.c \
              $(SRCDIR)/utils/search_utils.c \
              $(SRCDIR)/utils/exit_utils.c \
-             $(SRCDIR)/utils/redir_utils.c \
              $(SRCDIR)/utils/heredoc_utils.c \
+             $(SRCDIR)/utils/heredoc_expand_utils.c \
              $(SRCDIR)/utils/shell_utils.c \
              $(SRCDIR)/utils/input_utils.c \
              $(SRCDIR)/utils/pipeline_utils.c \

@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 16:56:29 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/04 11:54:39 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,8 +78,8 @@ void	close_all_pipes(t_pipe_ctx *px, int count);
 int		create_all_pipes(t_pipe_ctx *px);
 int		wait_all_children(pid_t *pids, int n);
 
-/* External command executor */
-int		execute_external(t_command *cmd, t_shell *shell);
+/* External command executor (in child process) */
+int		exec_external_in_child(t_command *cmd, t_shell *shell);
 
 /* ************************************************************************** */
 /*                              BUILTINS                                      */
@@ -104,8 +104,6 @@ int		setup_redirections(t_redir *redirs, int *in_fd, int *out_fd);
 int		apply_redirections(int in_fd, int out_fd);
 int		save_std_fds(t_shell *shell);
 int		restore_std_fds(t_shell *shell);
-void	close_redir_fds(int in_fd, int out_fd);
-void	update_fd(int *fd_ptr, int new_fd, int std_fd);
 
 /* ************************************************************************** */
 /*                              HEREDOC                                       */

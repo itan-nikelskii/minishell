@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 15:04:00 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/04 11:54:39 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,13 +71,14 @@ int	execute_command(t_command *cmd, t_shell *shell)
 }
 
 /**
- * Execute builtin with redirections
+ * Execute builtin in parent process
+ * Handles redirections by saving/restoring stdin/stdout
  * Also handles redirections-only commands (no argv)
  * @param cmd Command to execute
  * @param shell Shell state
  * @return Exit status
  */
-static int	exec_builtin_with_redir(t_command *cmd, t_shell *shell)
+static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
 {
 	int	in_fd;
 	int	out_fd;
@@ -91,7 +92,10 @@ static int	exec_builtin_with_redir(t_command *cmd, t_shell *shell)
 	}
 	if (save_std_fds(shell) == -1)
 	{
-		close_redir_fds(in_fd, out_fd);
+		if (in_fd != STDIN_FILENO)
+			close(in_fd);
+		if (out_fd != STDOUT_FILENO)
+			close(out_fd);
 		return (1);
 	}
 	if (apply_redirections(in_fd, out_fd) == -1)
@@ -124,23 +128,23 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 	if (!cmd->argv || !cmd->argv[0])
 	{
 		if (cmd->redirs)
-			return (exec_builtin_with_redir(cmd, shell));
+			return (exec_builtin_in_parent(cmd, shell));
 		return (0);
 	}
 	if (is_builtin(cmd->argv[0]))
 	{
 		if (cmd->redirs)
-			exit_status = exec_builtin_with_redir(cmd, shell);
+			exit_status = exec_builtin_in_parent(cmd, shell);
 		else
 			exit_status = execute_builtin(cmd, shell);
 	}
 	else
-		exit_status = execute_external(cmd, shell);
+		exit_status = exec_external_in_child(cmd, shell);
 	return (exit_status);
 }
 
 /**
- * Executes an external command using fork + execve
+ * Execute external command in child process (fork + execve)
  *
  * Process flow:
  * 1. PARENT: fork() creates child process
@@ -151,7 +155,7 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
  * @param shell Shell state
  * @return Exit status of the command
  */
-int	execute_external(t_command *cmd, t_shell *shell)
+int	exec_external_in_child(t_command *cmd, t_shell *shell)
 {
 	pid_t	pid;
 	int		status;
