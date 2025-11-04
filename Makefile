@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: acossari <acossari@student.42.fr>          +#+  +:+       +#+         #
+#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/11/04 12:53:04 by acossari         ###   ########.fr        #
+#    Updated: 2025/11/04 13:06:51 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -80,6 +80,7 @@ UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/shell_utils.c \
              $(SRCDIR)/utils/input_utils.c \
              $(SRCDIR)/utils/pipeline_utils.c \
+             $(SRCDIR)/utils/redir_utils.c \
 
 # Signal sources
 SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \

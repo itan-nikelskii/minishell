@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 11:54:39 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/04 13:06:01 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -168,6 +168,9 @@ int		count_array(char **array);
 int		keycmp(const char *a, const char *b);
 void	sort_env_array(char **env);
 void	array_copy_except(char **dest, char **src, int skip_idx, int total);
+
+/* Redirection utils */
+void	cleanup_redir_fds(int in_fd, int out_fd);
 
 /* Search utils */
 int		find_in_array(char **arr, const char *key, bool require_equal);

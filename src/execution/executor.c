@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 11:54:39 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/04 13:06:01 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -91,13 +91,7 @@ static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
 		return (1);
 	}
 	if (save_std_fds(shell) == -1)
-	{
-		if (in_fd != STDIN_FILENO)
-			close(in_fd);
-		if (out_fd != STDOUT_FILENO)
-			close(out_fd);
-		return (1);
-	}
+		return (cleanup_redir_fds(in_fd, out_fd), 1);
 	if (apply_redirections(in_fd, out_fd) == -1)
 		return (restore_std_fds(shell), 1);
 	if (cmd->argv && cmd->argv[0])
