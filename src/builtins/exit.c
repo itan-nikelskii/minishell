@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 12:43:11 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/11/05 11:09:46 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/05 11:57:12 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,9 +44,18 @@ static void	exit_invalid_arg(char *arg, t_shell *shell)
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
 	ft_putstr_fd("minishell: exit: ", STDERR_FILENO);
-	ft_putstr_fd(arg, STDERR_FILENO);
-	ft_putendl_fd(": numeric argument required", STDERR_FILENO);
-	if (!shell->in_child)	// MODIFIED (this whole if block)
+	// MODIFIED: these three if-else-if blocks ensure that exit 100000000000000
+	// does not leak:
+	if (arg)
+	{
+		ft_putstr_fd(arg, STDERR_FILENO);
+		ft_putendl_fd(": numeric argument required", STDERR_FILENO);
+	}
+	else
+		ft_putendl_fd(": numeric argument required", STDERR_FILENO);
+	if (arg)
+		free(arg);
+	if (!shell->in_child)
 	{
 		clear_history();
 		shell_cleanup(shell);
@@ -124,8 +133,13 @@ int	builtin_exit(t_command *cmd, t_shell *shell)
 	}
 	if (!is_valid_exit_arg(cmd->argv[1], &val))
 	{
-		free_commands(cmd);	// MODIFIED
-		exit_invalid_arg(cmd->argv[1], shell);
+		// MODIFIED: duplicate the invalid arg before freeing cmd so the error
+		// printer can safely read it (otherwise invalid read size issues)
+		char *bad_arg = ft_strdup(cmd->argv[1]);
+		free_commands(cmd);
+		if (!bad_arg)
+			exit_invalid_arg(NULL, shell);
+		exit_invalid_arg(bad_arg, shell);
 	}
 	if (argc > 2)
 		return (exit_too_many_args(shell));
