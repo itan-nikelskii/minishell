@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exit.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 12:43:11 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/05 11:09:46 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,9 +18,20 @@
  */
 static void	exit_no_args(t_shell *shell)
 {
+	int exit_status;
+
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
-	exit(shell->last_exit_status);
+	// MODIFIED: save the exit status before freeing shell to avoid use-after-free:
+	exit_status = shell->last_exit_status;
+	// MODIFIED: if it's the main shell (not a child), do cleanup so we don't
+	// leak allocations tracked by valgrind (env, xenv, history, etc):
+	if (!shell->in_child)
+	{
+		clear_history();
+		shell_cleanup(shell);
+	}
+	exit(exit_status);
 }
 
 /**
@@ -35,6 +46,11 @@ static void	exit_invalid_arg(char *arg, t_shell *shell)
 	ft_putstr_fd("minishell: exit: ", STDERR_FILENO);
 	ft_putstr_fd(arg, STDERR_FILENO);
 	ft_putendl_fd(": numeric argument required", STDERR_FILENO);
+	if (!shell->in_child)	// MODIFIED (this whole if block)
+	{
+		clear_history();
+		shell_cleanup(shell);
+	}
 	exit(2);
 }
 
@@ -52,7 +68,7 @@ static int	exit_too_many_args(t_shell *shell)
 }
 
 /*
-** EXIT — Behavior and design notes (minishell)
+** EXIT — Behavior and design notes
 **
 ** Cases and exit codes:
 **  - exit → prints "exit" and terminates with last_exit_status
@@ -101,12 +117,27 @@ int	builtin_exit(t_command *cmd, t_shell *shell)
 
 	argc = count_array(cmd->argv);
 	if (argc == 1)
+	{
+		// MODIFIED: free the built command struc before exiting:
+		free_commands(cmd);
 		exit_no_args(shell);
+	}
 	if (!is_valid_exit_arg(cmd->argv[1], &val))
+	{
+		free_commands(cmd);	// MODIFIED
 		exit_invalid_arg(cmd->argv[1], shell);
+	}
 	if (argc > 2)
 		return (exit_too_many_args(shell));
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
+	// MODIFIED: free command resources for the command being executed, then
+	// cleanup shell/global resources when exiting the main shell:
+	if (!shell->in_child)
+	{
+		free_commands(cmd);
+		clear_history();
+		shell_cleanup(shell);
+	}
 	exit((unsigned char)val);
 }
