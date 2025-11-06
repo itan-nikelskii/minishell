@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 09:37:50 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/06 18:15:56 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,9 +21,7 @@ static void	process_line(char *line, t_shell *shell)
 {
 	t_parse_result	result;
 
-	result.commands = NULL;
-	result.error = NULL;
-	result.incomplete_pipe = false;
+	result = (t_parse_result){NULL, NULL, false};
 	if (parse(line, &result, shell) != 0)
 		return (print_error(NULL, "internal parse error"),
 			free_commands(result.commands), free(line));
@@ -33,11 +31,11 @@ static void	process_line(char *line, t_shell *shell)
 			free_commands(result.commands), free(line));
 	if (result.incomplete_pipe)
 	{
-		free_commands(result.commands);				// MODIFIED: fix for issue #28 (trailing pipe leaks)
+		free_commands(result.commands);
 		line = process_continuation(line, shell);
-		if (!line)
-			return ;
-		return (process_line(line, shell));
+		if (line)
+			process_line(line, shell);
+		return ;
 	}
 	if (result.commands)
 	{

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   env.c                                              :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 14:36:19 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 15:12:00 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/06 20:42:49 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,10 +25,9 @@ int	builtin_env(t_command *cmd, t_shell *shell)
 
 	if (!shell->envp)
 		return (0);
-	if (cmd && cmd->argv && cmd->argv[1])
+	if (cmd->argv[1])
 	{
-		errno = ENOENT;
-		print_perror("env", cmd->argv[1]);
+		print_error_arg("env", cmd->argv[1], "No such file or directory");
 		return (127);
 	}
 	i = 0;
