@@ -3,14 +3,29 @@
 /*                                                        :::      ::::::::   */
 /*   cd.c                                               :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 18:41:09 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/06 12:01:10 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+/* Count and return the number of arguments, or 0 on error. */	// MODIFIED: new helper to help with line count in resolve_cd_path
+static size_t	count_args(char **argv)
+{
+	size_t	i;
+
+	i = 0;
+	if (!argv)
+		return (0);
+	while (argv[i])
+		i++;
+	if (i > 0)
+		return (i - 1);
+	return (0);
+}
 
 /**
  * Resolve the target path for cd command
@@ -19,26 +34,37 @@
  * @param print_path Set to true if path should be printed after cd (cd -)
  * @return Path string, or NULL on error (already printed)
  */
+// MODIFIED: added explicit argument counting instead of directly checking for cmd->argv[2] (this fixes issue #30);
+// also rewrote the third if block a bit (it was checking for !path twice for no reason, this should be safer now)
+// Sorry for messing with line count! 
 static char	*resolve_cd_path(t_command *cmd, t_shell *shell, bool *print_path)
 {
 	char	*path;
+	size_t	arg_count;
 
-	if (cmd->argv[2])
+	if (cmd && cmd->argv)
+		arg_count = count_args(cmd->argv);
+	else
+		arg_count = 0;
+	if (arg_count > 1)
 		return (print_error("cd", "too many arguments"), NULL);
-	path = cmd->argv[1];
 	*print_path = false;
-	if (!path)
+	if (!cmd || !cmd->argv || !cmd->argv[1])
 	{
 		path = get_env_value("HOME", shell->envp);
 		if (!path || !*path)
 			return (print_error("cd", "HOME not set"), NULL);
 	}
-	else if (ft_strncmp(path, "-", 2) == 0)
+	else
 	{
-		path = get_env_value("OLDPWD", shell->envp);
-		if (!path || !*path)
-			return (print_error("cd", "OLDPWD not set"), NULL);
-		*print_path = true;
+		path = cmd->argv[1];
+		if (ft_strncmp(path, "-", 2) == 0)
+		{
+			path = get_env_value("OLDPWD", shell->envp);
+			if (!path || !*path)
+				return (print_error("cd", "OLDPWD not set"), NULL);
+			*print_path = true;
+		}
 	}
 	return (path);
 }
