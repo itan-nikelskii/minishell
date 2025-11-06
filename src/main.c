@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 12:59:31 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/06 09:37:50 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,7 @@ static void	process_line(char *line, t_shell *shell)
 			free_commands(result.commands), free(line));
 	if (result.incomplete_pipe)
 	{
+		free_commands(result.commands);				// MODIFIED: fix for issue #28 (trailing pipe leaks)
 		line = process_continuation(line, shell);
 		if (!line)
 			return ;
