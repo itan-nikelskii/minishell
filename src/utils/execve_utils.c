@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/17 16:27:35 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/28 00:57:52 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/06 14:43:32 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,7 +27,7 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 	if (!cmd->argv[0] || !*cmd->argv[0])
 	{
 		print_error(NULL, "command not found");
-		exit(CMD_NOT_FOUND);
+		cleanup_and_exit(shell, CMD_NOT_FOUND);
 	}
 	path = resolve_path(cmd->argv[0], shell->envp);
 	if (!path)
@@ -37,13 +37,13 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 			print_error(cmd->argv[0], "No such file or directory");
 		else
 			print_error(cmd->argv[0], "command not found");
-		exit(CMD_NOT_FOUND);
+		cleanup_and_exit(shell, CMD_NOT_FOUND);
 	}
 	execve(path, cmd->argv, shell->envp);
 	print_perror(cmd->argv[0], NULL);
 	if (path != cmd->argv[0])
 		free(path);
-	exit(map_execve_errno());
+	cleanup_and_exit(shell, map_execve_errno());
 }
 
 /**
@@ -61,26 +61,27 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 {
 	int	in_fd;
 	int	out_fd;
+	int	status;
 
 	reset_signals();
 	shell->in_child = true;
 	in_fd = STDIN_FILENO;
 	out_fd = STDOUT_FILENO;
-	if (cmd->redirs)
+	if (cmd->redirs && setup_redirections(cmd->redirs, &in_fd, &out_fd) == -1)
 	{
-		if (setup_redirections(cmd->redirs, &in_fd, &out_fd) == -1)
-		{
-			if (shell->last_exit_status == 130)
-				exit(130);
-			exit(EXIT_FAILURE);
-		}
-		if (apply_redirections(in_fd, out_fd) == -1)
-			exit(EXIT_FAILURE);
+		if (shell->last_exit_status == 130)
+			cleanup_and_exit(shell, 130);
+		cleanup_and_exit(shell, EXIT_FAILURE);
 	}
+	if (cmd->redirs && apply_redirections(in_fd, out_fd) == -1)
+		cleanup_and_exit(shell, EXIT_FAILURE);
 	if (!cmd->argv || !cmd->argv[0])
-		exit(0);
+		cleanup_and_exit(shell, 0);
 	if (allow_builtin && is_builtin(cmd->argv[0]))
-		exit(execute_builtin(cmd, shell));
+	{
+		status = execute_builtin(cmd, shell);
+		cleanup_and_exit(shell, status);
+	}
 	execve_or_die(cmd, shell);
 }
 

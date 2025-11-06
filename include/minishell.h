@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 13:06:01 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/06 14:50:19 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,6 +188,7 @@ void	free_redir_list(t_redir *redir_list);
 /* Shell lifecycle */
 t_shell	*shell_init(char **envp);
 int		shell_cleanup(t_shell *shell);
+void	cleanup_and_exit(t_shell *shell, int status);
 
 /* Input utils */
 char	*read_input_line(t_shell *shell);

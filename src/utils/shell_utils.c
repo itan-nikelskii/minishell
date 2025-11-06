@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 11:23:55 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 14:08:15 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/06 14:43:27 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,4 +56,16 @@ int	shell_cleanup(t_shell *shell)
 	exit_status = shell->last_exit_status;
 	free(shell);
 	return (exit_status);
+}
+
+/**
+ * Cleanup shell state and exit process
+ * Combines shell_cleanup() and exit() for cleaner code
+ * @param shell: Pointer to t_shell to cleanup
+ * @param status: Exit status code
+ */
+void	cleanup_and_exit(t_shell *shell, int status)
+{
+	shell_cleanup(shell);
+	exit(status);
 }

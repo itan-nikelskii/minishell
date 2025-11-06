@@ -3,64 +3,58 @@
 /*                                                        :::      ::::::::   */
 /*   exit.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 12:43:11 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/11/05 11:57:12 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/06 14:43:35 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
 /**
- * Handle exit with no arguments (FIX ISSUE 8.2)
+ * Handle exit with no arguments
+ * @param cmd Command structure to free
  * @param shell Shell state
  */
-static void	exit_no_args(t_shell *shell)
+static void	exit_no_args(t_command *cmd, t_shell *shell)
 {
-	int exit_status;
+	int	exit_status;
 
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
-	// MODIFIED: save the exit status before freeing shell to avoid use-after-free:
 	exit_status = shell->last_exit_status;
-	// MODIFIED: if it's the main shell (not a child), do cleanup so we don't
-	// leak allocations tracked by valgrind (env, xenv, history, etc):
+	free_commands(cmd);
 	if (!shell->in_child)
-	{
-		clear_history();
-		shell_cleanup(shell);
-	}
-	exit(exit_status);
+		rl_clear_history();
+	cleanup_and_exit(shell, exit_status);
 }
 
 /**
- * Handle exit with invalid numeric argument (FIX ISSUE 8.2)
- * @param arg The invalid argument
+ * Handle exit with invalid numeric argument
+ * @param arg_orig Original argument string (not freed by this function)
+ * @param cmd Command structure to free
  * @param shell Shell state
  */
-static void	exit_invalid_arg(char *arg, t_shell *shell)
+static void	exit_invalid_arg(const char *arg_orig, t_command *cmd,
+		t_shell *shell)
 {
+	char	*arg_copy;
+
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
 	ft_putstr_fd("minishell: exit: ", STDERR_FILENO);
-	// MODIFIED: these three if-else-if blocks ensure that exit 100000000000000
-	// does not leak:
-	if (arg)
+	arg_copy = ft_strdup(arg_orig);
+	free_commands(cmd);
+	if (arg_copy)
 	{
-		ft_putstr_fd(arg, STDERR_FILENO);
-		ft_putendl_fd(": numeric argument required", STDERR_FILENO);
+		ft_putstr_fd(arg_copy, STDERR_FILENO);
+		free(arg_copy);
 	}
-	else
-		ft_putendl_fd(": numeric argument required", STDERR_FILENO);
-	if (arg)
-		free(arg);
+	ft_putendl_fd(": numeric argument required", STDERR_FILENO);
 	if (!shell->in_child)
-	{
-		clear_history();
-		shell_cleanup(shell);
-	}
-	exit(2);
+		rl_clear_history();
+	cleanup_and_exit(shell, 2);
 }
 
 /**
@@ -126,32 +120,16 @@ int	builtin_exit(t_command *cmd, t_shell *shell)
 
 	argc = count_array(cmd->argv);
 	if (argc == 1)
-	{
-		// MODIFIED: free the built command struc before exiting:
-		free_commands(cmd);
-		exit_no_args(shell);
-	}
+		exit_no_args(cmd, shell);
 	if (!is_valid_exit_arg(cmd->argv[1], &val))
-	{
-		// MODIFIED: duplicate the invalid arg before freeing cmd so the error
-		// printer can safely read it (otherwise invalid read size issues)
-		char *bad_arg = ft_strdup(cmd->argv[1]);
-		free_commands(cmd);
-		if (!bad_arg)
-			exit_invalid_arg(NULL, shell);
-		exit_invalid_arg(bad_arg, shell);
-	}
+		exit_invalid_arg(cmd->argv[1], cmd, shell);
 	if (argc > 2)
 		return (exit_too_many_args(shell));
 	if (shell->interactive && !shell->in_child)
 		ft_putendl_fd("exit", STDERR_FILENO);
-	// MODIFIED: free command resources for the command being executed, then
-	// cleanup shell/global resources when exiting the main shell:
+	free_commands(cmd);
 	if (!shell->in_child)
-	{
-		free_commands(cmd);
-		clear_history();
-		shell_cleanup(shell);
-	}
-	exit((unsigned char)val);
+		rl_clear_history();
+	cleanup_and_exit(shell, (unsigned char)val);
+	return (0);
 }
