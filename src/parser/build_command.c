@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/03 12:19:46 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/06 17:51:23 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -52,7 +52,7 @@ static t_command	*init_t_command(t_token *token)
 	cmd->argv = NULL;
 	cmd->next = NULL;
 	word_count = count_words_in_segment(token);
-	cmd->argv = malloc((word_count + 1) * sizeof(char *));
+	cmd->argv = ft_calloc(word_count + 1, sizeof(char *));
 	if (!cmd->argv)
 	{
 		free(cmd);
