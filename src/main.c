@@ -6,11 +6,29 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 18:15:56 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/08 00:19:35 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
+
+/**
+ * Handle parse error: print, cleanup, and set exit status
+ * @param result: Parse result with error info
+ * @param line: Input line to free
+ * @param shell: Shell state to set exit status
+ */
+static void	handle_parse_error(t_parse_result *result, char *line,
+		t_shell *shell)
+{
+	print_error(NULL, result->error);
+	free(result->error);
+	free_commands(result->commands);
+	free(line);
+	if (!shell->interactive)
+		exit(2);
+	shell->last_exit_status = 2;
+}
 
 /**
  * Process a single input line: parse and execute
@@ -26,9 +44,7 @@ static void	process_line(char *line, t_shell *shell)
 		return (print_error(NULL, "internal parse error"),
 			free_commands(result.commands), free(line));
 	if (result.error)
-		return (print_error(NULL, result.error), free(result.error),
-			shell->last_exit_status = 2,
-			free_commands(result.commands), free(line));
+		return (handle_parse_error(&result, line, shell));
 	if (result.incomplete_pipe)
 	{
 		free_commands(result.commands);

@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   tokenize.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 14:18:25 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/08 00:13:08 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,19 +27,37 @@ static int	handle_pipe(size_t *i, t_tok_context *ctx)
 	return (0);
 }
 
-/* Create a redirection token and return 0 on success or -1 on failure. */
+/* Build bash-style error message with specific token (FIX 48) */
+static char	*build_redir_error(char bad_char)
+{
+	char	*msg;
+	char	token_str[50];
+
+	ft_strlcpy(token_str, "syntax error near unexpected token `", 50);
+	token_str[ft_strlen(token_str)] = bad_char;	// FIX 48: add specific char
+	token_str[ft_strlen(token_str) + 1] = '\0';
+	ft_strlcat(token_str, "'", 50);
+	msg = ft_strdup(token_str);
+	return (msg);
+}
+
+/* Create a redirection token and return 0 on success or -1 on failure.
+   (FIX 48) */
 static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 {
-	int	ret_value;
+	int		ret_value;
+	char	bad_char;	// FIX 48: extract specific problematic character
 
 	ret_value = create_token_redirection(line, i, &ctx->list);
 	if (ret_value != 0)
 	{
 		if (ret_value == -1)
 			*(ctx->error) = ft_strdup("malloc failure");
-		else
-			*(ctx->error) = ft_strdup("syntax error near unexpected "
-					"redirection token");
+		else	// FIX 48: decode char from return value
+		{
+			bad_char = (unsigned char)(-(ret_value + 256));	// FIX 48: decode
+			*(ctx->error) = build_redir_error(bad_char);	// FIX 48: build msg
+		}
 		free_tokens(ctx->list.head);
 		return (-1);
 	}
