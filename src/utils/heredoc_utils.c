@@ -13,51 +13,25 @@
 #include "../../include/minishell.h"
 
 /**
- * Get a unique counter for heredoc temp files
- * @return Incrementing integer each call
- */
-int	get_heredoc_counter(void)
-{
-	static int	counter = 0;
-
-	return (counter++);
-}
-
-/**
  * Build the filepath for the heredoc temp file
  * @param filepath: Buffer to store the generated filepath
  */
 void	build_heredoc_filepath(char *filepath)
 {
-	char	*prefix;
-	char	*pid_str;
-	char	*counter_str;
+	static int	counter = 0;
+	char		*prefix;
+	char		*pid_str;
+	char		*counter_str;
 
 	prefix = "/tmp/minishell_hd_";
 	pid_str = ft_itoa(getpid());
-	counter_str = ft_itoa(get_heredoc_counter());
+	counter_str = ft_itoa(counter++);
 	ft_strlcpy(filepath, prefix, HD_PATH_BUFSZ);
 	ft_strlcat(filepath, pid_str, HD_PATH_BUFSZ);
 	ft_strlcat(filepath, "_", HD_PATH_BUFSZ);
 	ft_strlcat(filepath, counter_str, HD_PATH_BUFSZ);
 	free(pid_str);
 	free(counter_str);
-}
-
-/**
- * Cleanup heredoc resources
- * @param fd_write: File descriptor to close (if not -1)
- * @param filepath: Path to the temp file to unlink (if not NULL)
- * @param line: Line buffer to free (if not NULL)
- */
-void	cleanup_heredoc(int fd_write, char *filepath, char *line)
-{
-	if (line)
-		free(line);
-	if (fd_write != -1)
-		close(fd_write);
-	if (filepath && filepath[0])
-		unlink(filepath);
 }
 
 /**
@@ -79,6 +53,39 @@ char	*read_heredoc_line(t_shell *shell)
 	if (len > 0 && line[len - 1] == '\n')
 		line[len - 1] = '\0';
 	return (line);
+}
+
+/**
+ * Print heredoc EOF warning (bash-like)
+ * @param delimiter: Expected delimiter
+ */
+void	print_heredoc_eof_warning(char *delimiter)
+{
+	ft_putstr_fd("minishell: warning: here-document at line X ", STDERR_FILENO);
+	ft_putstr_fd("delimited by end-of-file (wanted `", STDERR_FILENO);
+	ft_putstr_fd(delimiter, STDERR_FILENO);
+	ft_putstr_fd("')\n", STDERR_FILENO);
+}
+
+/**
+ * Cleanup prepared heredoc files
+ * @param cmd: Command with heredocs
+ */
+void	cleanup_prepared_heredocs(t_command *cmd)
+{
+	t_redir	*redir;
+
+	redir = cmd->redirs;
+	while (redir)
+	{
+		if (redir->type == TOKEN_HEREDOC && redir->hd_path)
+		{
+			unlink(redir->hd_path);
+			free(redir->hd_path);
+			redir->hd_path = NULL;
+		}
+		redir = redir->next;
+	}
 }
 
 /**

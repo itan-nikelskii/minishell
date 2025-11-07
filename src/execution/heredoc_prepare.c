@@ -13,39 +13,6 @@
 #include "../../include/minishell.h"
 
 /**
- * Cleanup prepared heredoc files
- * @param cmd: Command with heredocs
- */
-static void	cleanup_prepared_heredocs(t_command *cmd)
-{
-	t_redir	*redir;
-
-	redir = cmd->redirs;
-	while (redir)
-	{
-		if (redir->type == TOKEN_HEREDOC && redir->hd_path)
-		{
-			unlink(redir->hd_path);
-			free(redir->hd_path);
-			redir->hd_path = NULL;
-		}
-		redir = redir->next;
-	}
-}
-
-/**
- * Print heredoc EOF warning (bash-like)
- * @param delimiter: Expected delimiter
- */
-static void	print_heredoc_eof_warning(char *delimiter)
-{
-	ft_putstr_fd("minishell: warning: here-document at line X ", STDERR_FILENO);
-	ft_putstr_fd("delimited by end-of-file (wanted `", STDERR_FILENO);
-	ft_putstr_fd(delimiter, STDERR_FILENO);
-	ft_putstr_fd("')\n", STDERR_FILENO);
-}
-
-/**
  * Heredoc read loop in child process
  * @param fd: File descriptor to write to
  * @param delimiter: Heredoc delimiter
@@ -81,15 +48,15 @@ static void	heredoc_read_loop(int fd, char *delimiter, t_shell *shell,
 }
 
 /**
- * Spawn child to read heredoc and write to temp file
+ * Spawn child to read heredoc (interactive mode only)
  * @param delimiter: Heredoc delimiter
  * @param expand: Whether to expand variables
  * @param tmp_path: Path to temp file
  * @param shell: Shell state
  * @return 0 on success, 130 on SIGINT, -1 on error
  */
-static int	spawn_heredoc_reader(char *delimiter, bool expand, char *tmp_path,
-		t_shell *shell)
+static int	spawn_heredoc_interactive(char *delimiter, bool expand,
+		char *tmp_path, t_shell *shell)
 {
 	pid_t	pid;
 	int		fd;
@@ -117,15 +84,82 @@ static int	spawn_heredoc_reader(char *delimiter, bool expand, char *tmp_path,
 }
 
 /**
+ * Read heredoc in parent (non-interactive mode only)
+ * @param delimiter: Heredoc delimiter
+ * @param expand: Whether to expand variables
+ * @param tmp_path: Path to temp file
+ * @param shell: Shell state
+ * @return 0 on success, -1 on error
+ */
+static int	read_heredoc_noninteractive(char *delimiter, bool expand,
+		char *tmp_path, t_shell *shell)
+{
+	int		fd;
+	char	*line;
+	char	*expanded;
+
+	fd = open(tmp_path, O_CREAT | O_EXCL | O_WRONLY, 0600);
+	if (fd == -1)
+		return (-1);
+	while (1)
+	{
+		line = read_heredoc_line(shell);
+		if (!line)
+			return (print_heredoc_eof_warning(delimiter), close(fd), 0);
+		if (ft_strcmp(line, delimiter) == 0)
+			return (free(line), close(fd), 0);
+		if (expand)
+		{
+			expanded = hd_expand_line(line, shell, true);
+			(free(line), line = expanded);
+			if (!line)
+				return (close(fd), -1);
+		}
+		write(fd, line, ft_strlen(line));
+		write(fd, "\n", 1);
+		free(line);
+	}
+}
+
+/**
+ * Process a single heredoc redirection
+ * @param redir: Redirection node
+ * @param shell: Shell state
+ * @param cmd: Command (for cleanup on error)
+ * @return 0 on success, 130 on SIGINT, -1 on error
+ */
+static int	process_single_heredoc(t_redir *redir, t_shell *shell,
+		t_command *cmd)
+{
+	char	tmp_path[256];
+	int		result;
+
+	build_heredoc_filepath(tmp_path);
+	if (shell->interactive)
+		result = spawn_heredoc_interactive(redir->target, !redir->was_quoted,
+				tmp_path, shell);
+	else
+		result = read_heredoc_noninteractive(redir->target, !redir->was_quoted,
+				tmp_path, shell);
+	if (result == 130)
+		return (cleanup_prepared_heredocs(cmd), 130);
+	if (result != 0)
+		return (cleanup_prepared_heredocs(cmd), -1);
+	redir->hd_path = ft_strdup(tmp_path);
+	if (!redir->hd_path)
+		return (cleanup_prepared_heredocs(cmd), -1);
+	return (0);
+}
+
+/**
  * Prepare all heredocs for a command
  * @param cmd: Command with redirections
  * @param shell: Shell state
- * @return 0 on success, 130 on SIGINT, -1 on error
+ * @return 0 on success, 130 on SIGINT, -1 on error, -2 on too many heredocs
  */
 int	prepare_heredocs(t_command *cmd, t_shell *shell)
 {
 	t_redir	*redir;
-	char	tmp_path[256];
 	int		result;
 
 	if (too_many_heredocs(cmd))
@@ -135,16 +169,9 @@ int	prepare_heredocs(t_command *cmd, t_shell *shell)
 	{
 		if (redir->type == TOKEN_HEREDOC)
 		{
-			build_heredoc_filepath(tmp_path);
-			result = spawn_heredoc_reader(redir->target, !redir->was_quoted,
-					tmp_path, shell);
-			if (result == 130)
-				return (cleanup_prepared_heredocs(cmd), 130);
+			result = process_single_heredoc(redir, shell, cmd);
 			if (result != 0)
-				return (cleanup_prepared_heredocs(cmd), -1);
-			redir->hd_path = ft_strdup(tmp_path);
-			if (!redir->hd_path)
-				return (cleanup_prepared_heredocs(cmd), -1);
+				return (result);
 		}
 		redir = redir->next;
 	}

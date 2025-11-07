@@ -119,6 +119,8 @@ int		hd_append_char(char **buf, char c);
 char	*hd_getenv(t_shell *shell, char *name);
 char	*hd_extract_varname(const char *str, size_t i);
 char	*read_heredoc_line(t_shell *shell);
+void	print_heredoc_eof_warning(char *delimiter);
+void	cleanup_prepared_heredocs(t_command *cmd);
 bool	too_many_heredocs(t_command *cmd);
 
 /* ************************************************************************** */
