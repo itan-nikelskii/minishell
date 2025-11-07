@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:12:02 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 13:01:40 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:53 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Parse single quoted literal (no expansion) and store it in *out;
    return 0 on sucess, -1 if something went wrong. */

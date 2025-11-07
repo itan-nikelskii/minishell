@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 11:42:23 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 09:36:38 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:57 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Append cmd to the command list. Caller provides pointers to head and tail. */
 static void	append_command(t_command **head, t_command **tail, t_command *cmd)

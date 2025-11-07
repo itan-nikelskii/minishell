@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:14:24 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/03 11:34:34 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:06 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Check for invalid redirection sequences:
  * more than two redir signs in a row;

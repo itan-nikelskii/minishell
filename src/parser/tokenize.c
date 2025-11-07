@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 12:45:55 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:17 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Create a pipe token and return 0 on success or -1 on malloc failure. */
 static int	handle_pipe(size_t *i, t_tok_context *ctx)

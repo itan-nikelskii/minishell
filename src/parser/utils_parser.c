@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:02:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/30 15:07:02 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:22 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Duplicate and return substring s[from ... to]; return NULL on failure. */
 char	*strdup_range(const char *s, size_t from, size_t to)

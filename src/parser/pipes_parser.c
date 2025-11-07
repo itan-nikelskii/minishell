@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:28:53 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 12:59:10 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:03 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Validate pipe usage in the token list:
 	- reject a leading pipe (e.g. "| echo"; second if);

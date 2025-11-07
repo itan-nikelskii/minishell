@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:08:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 09:44:20 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:47 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Expand the variable and return the result on success or NULL on failure. */
 static char	*expand_variable(const char *s, size_t idx, size_t *j, char **envp)

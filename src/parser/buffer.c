@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:25:18 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 11:18:16 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:32 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Create a dynamic buffer and initialize it to default values; on success,
 return a pointer to it; on failure, return NULL. */

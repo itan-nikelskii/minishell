@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 09:36:57 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:38 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Count words until a pipe or end of command segment; return count. */
 static size_t	count_words_in_segment(t_token *token)

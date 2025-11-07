@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:49:21 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/03 11:28:52 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:13 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Create and return a new token node. */
 t_token	*new_token(t_token_type type, char *text)

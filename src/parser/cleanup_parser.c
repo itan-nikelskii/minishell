@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:32:59 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/03 12:15:00 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:17:42 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Free tokens. */
 void	free_tokens(t_token *token)

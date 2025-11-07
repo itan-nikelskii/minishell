@@ -6,11 +6,11 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 10:54:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 11:21:41 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 10:18:34 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "../include/parser.h"
+#include "../../include/parser.h"
 
 /* Handle leading $ followed by a quoted segment ($'...' or $"...'). Skip the 
    leading $; parse the quoted segment and set *segment. Return -1 on error, 
