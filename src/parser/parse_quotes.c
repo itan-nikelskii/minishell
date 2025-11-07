@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_quotes.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:12:02 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 10:17:53 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 12:56:40 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -80,6 +80,13 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i;
 	while (s[j] != '\0' && is_word_char(s[j]))
 	{
+		if (s[j] == '\\' && s[j + 1] != '\0')	/* FIX 41: backslash escape */
+		{
+			if (append_char(dynamic_buf, s[j + 1]) != 0)
+				return (dynamic_buf_free(dynamic_buf), -1);
+			j += 2;
+			continue ;
+		}
 		if (s[j] == '$' && shell != NULL)
 		{
 			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)

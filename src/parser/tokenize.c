@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   tokenize.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 10:18:17 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 12:56:40 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,17 +107,17 @@ t_token	*tokenize(const char *line, char **error, t_shell *shell)
 	init_tok_context(&ctx, shell, error, &i);
 	while (line[i] != '\0')
 	{
-		if (ft_isspace((unsigned char)line[i]))
-		{
-			i++;
-			continue ;
-		}
-		if (line[i] == '\\' || line[i] == ';')
-		{
-			*error = ft_strdup("Unsupported escape or special character");
-			return (free_tokens(ctx.list.head), NULL);
-		}
-		status = handle_valid_token(line, &i, &ctx);
+	if (ft_isspace((unsigned char)line[i]))
+	{
+		i++;
+		continue ;
+	}
+	if (line[i] == ';')	/* FIX 41: removed backslash check */
+	{
+		*error = ft_strdup("Unsupported special character: ;");
+		return (free_tokens(ctx.list.head), NULL);
+	}
+	status = handle_valid_token(line, &i, &ctx);
 		if (status == -1)
 			return (NULL);
 		if (status == 0)
