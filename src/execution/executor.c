@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 11:27:49 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 14:00:22 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -117,13 +117,18 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 {
 	int	exit_status;
 
-	if (!cmd || !cmd->argv || !cmd->argv[0] || cmd->argv[0][0] == '\0')
+	if (!cmd)
 		return (0);
 	if (!cmd->argv || !cmd->argv[0])
 	{
 		if (cmd->redirs)
 			return (exec_builtin_in_parent(cmd, shell));
 		return (0);
+	}
+	if (cmd->argv[0][0] == '\0')
+	{
+		print_error(cmd->argv[0], "command not found");
+		return (127);
 	}
 	if (is_builtin(cmd->argv[0]))
 	{

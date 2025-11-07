@@ -6,13 +6,15 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 12:11:33 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 14:16:11 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/parser.h"
 
-/* Count words until a pipe or end of command segment; return count. */
+/* Count words until a pipe or end of command segment; return count.
+Note the internal 'if': treat empty text as a word only if it was explicitly 
+quoted; unquoted empty words (e.g. unquoted $UNSET) should be skipped. */
 static size_t	count_words_in_segment(t_token *token)
 {
 	size_t	count;
@@ -21,7 +23,10 @@ static size_t	count_words_in_segment(t_token *token)
 	while (token != NULL && token->type != TOKEN_PIPE)
 	{
 		if (token->type == TOKEN_WORD)
-			count++;
+		{
+			if ((token->text && token->text[0] != '\0') || token->was_quoted)
+				count++;
+		}
 		token = token->next;
 	}
 	return (count);
@@ -100,14 +105,16 @@ t_command	*build_command_from_tokens(t_token **tp, char **error)
 	{
 		if (token->type == TOKEN_WORD)
 		{
-			if (add_word_to_cmd_argv(cmd, token->text, &index) != 0)
-				return (free_commands(cmd), NULL);
+			if (!token->text || token->text[0] != '\0'
+				|| token->was_quoted != false)
+			{
+				if (add_word_to_cmd_argv(cmd, token->text, &index) != 0)
+					return (free_commands(cmd), NULL);
+			}
 		}
 		else if (handle_redirection_token(&token, cmd, error) != 0)
 			return (free_commands(cmd), NULL);
 		token = token->next;
 	}
-	cmd->argv[index] = NULL;
-	*tp = token;
-	return (cmd);
+	return (cmd->argv[index] = NULL, *tp = token, cmd);
 }

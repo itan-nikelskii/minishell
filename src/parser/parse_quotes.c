@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parse_quotes.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:12:02 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 12:56:40 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 14:26:49 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -66,6 +66,28 @@ int	parse_double_quote(const char *s, size_t *i, char **out, t_shell *shell)
 	return (0);
 }
 
+/* Handle special characters: \ and $. Return 1 if handling was successful,
+-1 on error, and 0 if it was not a special character (the caller should do
+a normal append). */
+static int	handle_special_char(const char *s, size_t *j, t_dyn_buf *buf,
+			t_shell *shell)
+{
+	if (s[*j] == '\\' && s[*j + 1] != '\0')
+	{
+		if (append_char(buf, s[*j + 1]) != 0)
+			return (-1);
+		*j += 2;
+		return (1);
+	}
+	if (s[*j] == '$' && shell != NULL)
+	{
+		if (expand_dollar(s, j, buf, shell) != 0)
+			return (-1);
+		return (1);
+	}
+	return (0);
+}
+
 /* Parse an unquoted word, allowing for $ expansion, and store it in *out.
    Don't expand $ in heredoc delimiters (shell == NULL).
    Return 0 on sucess, -1 if something went wrong. */
@@ -73,6 +95,7 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 {
 	size_t		j;
 	t_dyn_buf	*dynamic_buf;
+	int			char_handle_result;
 
 	dynamic_buf = dynbuf_create_and_init();
 	if (!dynamic_buf)
@@ -80,19 +103,11 @@ int	parse_unquoted_word(const char *s, size_t *i, char **out, t_shell *shell)
 	j = *i;
 	while (s[j] != '\0' && is_word_char(s[j]))
 	{
-		if (s[j] == '\\' && s[j + 1] != '\0')	/* FIX 41: backslash escape */
-		{
-			if (append_char(dynamic_buf, s[j + 1]) != 0)
-				return (dynamic_buf_free(dynamic_buf), -1);
-			j += 2;
+		char_handle_result = handle_special_char(s, &j, dynamic_buf, shell);
+		if (char_handle_result == -1)
+			return (dynamic_buf_free(dynamic_buf), -1);
+		if (char_handle_result == 1)
 			continue ;
-		}
-		if (s[j] == '$' && shell != NULL)
-		{
-			if (expand_dollar(s, &j, dynamic_buf, shell) != 0)
-				return (dynamic_buf_free(dynamic_buf), -1);
-			continue ;
-		}
 		if (append_char(dynamic_buf, s[j]) != 0)
 			return (dynamic_buf_free(dynamic_buf), -1);
 		j++;
