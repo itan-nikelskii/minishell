@@ -6,11 +6,27 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 16:18:34 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 19:04:39 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
+
+/**
+ * Handle the export command line options.
+ * @param arg The argument to check.
+ * @return 0 if no option, 1 if long option, -1 if invalid.
+ */
+static int	handle_export_option(char *arg)
+{
+	if (arg[0] != '-')
+		return (0);
+	if (ft_strncmp(arg, "--", 3) == 0)
+		return (1);
+	print_error_arg("export", arg, "invalid option");
+	ft_putendl_fd("export: usage: export [name[=value] ...]", STDERR_FILENO);
+	return (-1);
+}
 
 /**
  * Export a variable without a value (only key).
@@ -56,6 +72,8 @@ static int	process_export_arg(char *arg, t_shell *shell)
 	char	*equal_sign;
 
 	if (!arg || !*arg)
+		return (1);
+	if (handle_export_option(arg) == -1)
 		return (1);
 	if (!is_valid_export_identifier(arg))
 	{
@@ -134,11 +152,17 @@ int	builtin_export(t_command *cmd, t_shell *shell)
 {
 	int	i;
 	int	exit_status;
+	int	opt_result;
 
 	if (!cmd->argv[1])
 		return (print_export_merged(shell), 0);
-	exit_status = 0;
 	i = 1;
+	opt_result = handle_export_option(cmd->argv[i]);
+	if (opt_result == -1)
+		return (2);
+	if (opt_result == 1)
+		i++;
+	exit_status = 0;
 	while (cmd->argv[i])
 	{
 		if (process_export_arg(cmd->argv[i], shell))
