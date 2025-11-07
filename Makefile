@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
+#    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/11/04 13:06:51 by antoniocoss      ###   ########.fr        #
+#    Updated: 2025/11/07 09:53:52 by inikelsk         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -43,50 +43,24 @@ LIBFTDIR = libft
 #                              SOURCE FILES                                    #
 # **************************************************************************** #
 
-# Execution sources
-EXEC_SRCS = $(SRCDIR)/execution/executor.c \
-            $(SRCDIR)/execution/redirections.c \
-            $(SRCDIR)/execution/redirections_backup.c \
-            $(SRCDIR)/execution/pipeline.c \
-            $(SRCDIR)/execution/heredoc_expand.c \
-            $(SRCDIR)/execution/heredoc_prepare.c \
-            $(SRCDIR)/execution/continuation.c
-
 # Builtin sources
 BUILTIN_SRCS = $(SRCDIR)/builtins/builtin_dispatcher.c \
-               $(SRCDIR)/builtins/pwd.c \
+               $(SRCDIR)/builtins/cd.c \
                $(SRCDIR)/builtins/echo.c \
                $(SRCDIR)/builtins/env.c \
-               $(SRCDIR)/builtins/cd.c \
+               $(SRCDIR)/builtins/exit.c \
                $(SRCDIR)/builtins/export.c \
-               $(SRCDIR)/builtins/unset.c \
-               $(SRCDIR)/builtins/exit.c
+               $(SRCDIR)/builtins/pwd.c \
+               $(SRCDIR)/builtins/unset.c
 
-# Utils sources
-UTILS_SRCS = $(SRCDIR)/utils/cmd_utils.c \
-             $(SRCDIR)/utils/memory_utils.c \
-             $(SRCDIR)/utils/path_resolver.c \
-             $(SRCDIR)/utils/error_handler.c \
-             $(SRCDIR)/utils/process_utils.c \
-             $(SRCDIR)/utils/execve_utils.c \
-             $(SRCDIR)/utils/env_utils.c \
-             $(SRCDIR)/utils/export_utils.c \
-             $(SRCDIR)/utils/xenv_utils.c \
-             $(SRCDIR)/utils/array_utils.c \
-             $(SRCDIR)/utils/search_utils.c \
-             $(SRCDIR)/utils/exit_utils.c \
-             $(SRCDIR)/utils/heredoc_utils.c \
-             $(SRCDIR)/utils/heredoc_expand_utils.c \
-             $(SRCDIR)/utils/shell_utils.c \
-             $(SRCDIR)/utils/input_utils.c \
-             $(SRCDIR)/utils/pipeline_utils.c \
-             $(SRCDIR)/utils/redir_utils.c \
-
-# Signal sources
-SIGNAL_SRCS = $(SRCDIR)/signals/signals.c \
-              $(SRCDIR)/signals/signals_parent_ps1.c \
-              $(SRCDIR)/signals/signals_parent_wait.c \
-              $(SRCDIR)/signals/signals_child_ps2.c
+# Execution sources
+EXEC_SRCS = $(SRCDIR)/execution/continuation.c \
+            $(SRCDIR)/execution/executor.c \
+            $(SRCDIR)/execution/heredoc_expand.c \
+            $(SRCDIR)/execution/heredoc_prepare.c \
+            $(SRCDIR)/execution/pipeline.c \
+            $(SRCDIR)/execution/redirections_backup.c \
+            $(SRCDIR)/execution/redirections.c
 
 # Parser sources
 PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
@@ -101,6 +75,32 @@ PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
               $(SRCDIR)/parser/structs_and_tokens.c \
               $(SRCDIR)/parser/tokenize.c \
               $(SRCDIR)/parser/utils_parser.c
+
+# Signal sources
+SIGNAL_SRCS = $(SRCDIR)/signals/signals_child_ps2.c \
+              $(SRCDIR)/signals/signals_parent_ps1.c \
+              $(SRCDIR)/signals/signals_parent_wait.c \
+              $(SRCDIR)/signals/signals.c
+
+# Utils sources
+UTILS_SRCS = $(SRCDIR)/utils/array_utils.c \
+             $(SRCDIR)/utils/cmd_utils.c \
+             $(SRCDIR)/utils/env_utils.c \
+             $(SRCDIR)/utils/error_handler.c \
+             $(SRCDIR)/utils/execve_utils.c \
+             $(SRCDIR)/utils/exit_utils.c \
+             $(SRCDIR)/utils/export_utils.c \
+             $(SRCDIR)/utils/heredoc_expand_utils.c \
+             $(SRCDIR)/utils/heredoc_utils.c \
+             $(SRCDIR)/utils/input_utils.c \
+             $(SRCDIR)/utils/memory_utils.c \
+             $(SRCDIR)/utils/path_resolver.c \
+             $(SRCDIR)/utils/pipeline_utils.c \
+             $(SRCDIR)/utils/process_utils.c \
+             $(SRCDIR)/utils/redir_utils.c \
+             $(SRCDIR)/utils/search_utils.c \
+             $(SRCDIR)/utils/shell_utils.c \
+             $(SRCDIR)/utils/xenv_utils.c
 
 # Main source
 MAIN_SRC = $(SRCDIR)/main.c

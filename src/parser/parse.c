@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 11:42:23 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/03 12:04:07 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 09:36:38 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,7 +49,7 @@ static t_command	*parse_tokens_to_commands(t_token *t, char **error)
 		if (!cmd)
 		{
 			if (head)
-				free_commands(head);				// MODIFIED: free any commands already built before returning
+				free_commands(head);
 			return (NULL);
 		}
 		append_command(&head, &tail, cmd);

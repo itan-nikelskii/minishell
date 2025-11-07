@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/06 17:51:23 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 09:36:57 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -101,10 +101,10 @@ t_command	*build_command_from_tokens(t_token **tp, char **error)
 		if (token->type == TOKEN_WORD)
 		{
 			if (add_word_to_cmd_argv(cmd, token->text, &index) != 0)
-				return (free_commands(cmd), NULL);						// MODIFIED: free partially built command to avoid leaks
+				return (free_commands(cmd), NULL);
 		}
 		else if (handle_redirection_token(&token, cmd, error) != 0)
-			return (free_commands(cmd), NULL);							// MODIFIED: free partially built command to avoid leaks
+			return (free_commands(cmd), NULL);
 		token = token->next;
 	}
 	cmd->argv[index] = NULL;

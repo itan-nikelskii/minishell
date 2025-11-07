@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:08:46 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/10/31 13:23:31 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 09:44:20 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,6 +36,8 @@ static char	*expand_variable(const char *s, size_t idx, size_t *j, char **envp)
 	return (result);
 }
 
+/* Get the expanded value: either the last exit status (? case) or the actual
+   alphabetic string; return that value, or NULL on error. */
 static char	*get_expanded_value(const char *s, size_t *j, t_shell *shell)
 {
 	size_t	index;
@@ -60,7 +62,8 @@ static char	*get_expanded_value(const char *s, size_t *j, t_shell *shell)
 	return (expanded);
 }
 
-/* TODO: documentation (after proper refactoring for norminette) */
+/* Extract the expanded value and append it to buffer, otherwise append $.
+   Return 0 on success, -1 on failure. */
 int	expand_dollar(const char *s, size_t *j, t_dyn_buf *buf, t_shell *shell)
 {
 	char	*expanded;

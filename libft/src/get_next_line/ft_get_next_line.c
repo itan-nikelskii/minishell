@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_get_next_line.c                                 :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/21 10:51:49 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/10/01 19:57:41 by acossari         ###   ########.fr       */
+/*   Updated: 2025/11/07 09:35:59 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,20 +104,6 @@ static int	update_stash(t_buffer *stash)
 		stash->data[j++] = stash->data[i++];
 	stash->len = j;
 	return (1);
-}
-
-/*
-** clear_stash: free and reset all fields of a t_buffer to initial state
-** @stash:  pointer to t_buffer to clear
-** Return: void (stash is now empty and safe for reuse)
-*/
-void	clear_stash(t_buffer *stash)
-{
-	if (stash->data)
-		free(stash->data);
-	stash->data = NULL;
-	stash->len = 0;
-	stash->cap = 0;
 }
 
 /*
