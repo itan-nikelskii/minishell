@@ -14,7 +14,7 @@
 
 /* Check for invalid redirection sequences:
  * more than two redir signs in a row;
- * <>, ><;
+ * <>, ><, <|;
  * any valid redir sign followed by space(s) and another redir sign.
 Return true if found an invalid sequence, false otherwise. */
 static bool	is_invalid_redir_sequence(const char *line, size_t i)
@@ -28,6 +28,8 @@ static bool	is_invalid_redir_sequence(const char *line, size_t i)
 	count = 0;
 	this = line[i];
 	next = line[i + 1];
+	if (this == '<' && next == '|')
+		return (true);
 	while (line[j] == '<' || line[j] == '>')
 	{
 		count++;
@@ -44,9 +46,9 @@ static bool	is_invalid_redir_sequence(const char *line, size_t i)
 	return (false);
 }
 
-/* Handle the redirection (<, <<, >, >>) chars: determine the redirection type,
-create a new token, append it to the token list, and update *i depending on
-the number of chars in the redirection type (1 or 2).
+/* Handle the redirection (<, <<, >, >>, >|) chars: determine the redirection
+type, create a new token, append it to the token list, and update *i depending
+on the number of chars in the redirection type (1 or 2).
 Return 0 on success, -1 on malloc failure, or -2 on syntax error. */
 int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 {
@@ -65,10 +67,13 @@ int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 	{
 		if (line[*i + 1] && line[*i + 1] == '>')
 			token = new_token(TOKEN_REDIR_APPEND, ft_strdup(">>"));
+		else if (line[*i + 1] && line[*i + 1] == '|')
+			token = new_token(TOKEN_REDIR_OUT, ft_strdup(">|"));
 		else
 			token = new_token(TOKEN_REDIR_OUT, ft_strdup(">"));
 	}
-	if (line[*i + 1] && (line[*i + 1] == '<' || line[*i + 1] == '>'))
+	if (line[*i + 1] && (line[*i + 1] == '<' || line[*i + 1] == '>'
+			|| line[*i + 1] == '|'))
 		*i += 2;
 	else
 		*i += 1;

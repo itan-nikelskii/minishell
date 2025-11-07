@@ -6,18 +6,81 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 18:41:09 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 20:14:05 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 18:14:16 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
 /**
- * Resolve the target path for cd command
+ * Get the home directory path from the environment.
+ * @param shell Shell state with envp
+ * @return Home directory path, or NULL on error
+ */
+static char	*get_home_path(t_shell *shell)
+{
+	char	*path;
+
+	path = get_env_value("HOME", shell->envp);
+	if (!path || !*path)
+	{
+		print_error("cd", "HOME not set");
+		return (NULL);
+	}
+	return (path);
+}
+
+/**
+ * Handle the '--' argument for cd: change to home directory
  * @param cmd Command structure with argv
  * @param shell Shell state with envp
- * @param is_dash Set to true if path should be printed after cd (cd -)
- * @return Path string, or NULL on error (already printed)
+ * @param arg_count Number of arguments in cmd->argv
+ * @return Target path for cd, or NULL on error
+ */
+static char	*handle_double_dash(t_command *cmd, t_shell *shell, int arg_count)
+{
+	if (arg_count == 2)
+		return (get_home_path(shell));
+	if (arg_count == 3)
+		return (cmd->argv[2]);
+	print_error("cd", "too many arguments");
+	return (NULL);
+}
+
+/**
+ * Handle the '-' argument for cd: change to previous directory
+ * @param shell Shell state with envp
+ * @param is_dash Pointer to bool that will be set to true if path is '-'
+ * @return Target path for cd, or NULL on error
+ */
+static char	*handle_dash(t_shell *shell, bool *is_dash)
+{
+	char	*path;
+
+	path = get_env_value("OLDPWD", shell->envp);
+	if (!path || !*path)
+	{
+		print_error("cd", "OLDPWD not set");
+		return (NULL);
+	}
+	*is_dash = true;
+	return (path);
+}
+
+/**
+ * Determine the target path for the cd command based on arguments.
+ * Flow: arg_count==1 → HOME
+ *       argv[1]=="--" → handle_double_dash():
+ *           - arg_count==2: "cd --" → HOME
+ *           - arg_count==3: "cd -- /tmp" → /tmp
+ *           - arg_count>3: "cd -- a b c" → error "too many arguments"
+ *       arg_count>2 → error (rejects "cd - /tmp", "cd /foo /bar")
+ *       argv[1]=="-" → handle_dash() (OLDPWD, prints path)
+ *       default → argv[1]
+ * @param cmd Command structure with argv
+ * @param shell Shell state with envp
+ * @param is_dash Pointer to bool that will be set to true if path is '-'
+ * @return Target path for cd, or NULL on error
  */
 static char	*resolve_cd_path(t_command *cmd, t_shell *shell, bool *is_dash)
 {
@@ -25,26 +88,16 @@ static char	*resolve_cd_path(t_command *cmd, t_shell *shell, bool *is_dash)
 	int		arg_count;
 
 	arg_count = count_array(cmd->argv);
-	if (arg_count > 2)
-		return (print_error("cd", "too many arguments"), NULL);
 	*is_dash = false;
 	if (arg_count == 1)
-	{
-		path = get_env_value("HOME", shell->envp);
-		if (!path || !*path)
-			return (print_error("cd", "HOME not set"), NULL);
-	}
-	else
-	{
-		path = cmd->argv[1];
-		if (ft_strncmp(path, "-", 2) == 0)
-		{
-			path = get_env_value("OLDPWD", shell->envp);
-			if (!path || !*path)
-				return (print_error("cd", "OLDPWD not set"), NULL);
-			*is_dash = true;
-		}
-	}
+		return (get_home_path(shell));
+	path = cmd->argv[1];
+	if (ft_strncmp(path, "--", 3) == 0)
+		return (handle_double_dash(cmd, shell, arg_count));
+	if (arg_count > 2)
+		return (print_error("cd", "too many arguments"), NULL);
+	if (ft_strncmp(path, "-", 2) == 0)
+		return (handle_dash(shell, is_dash));
 	return (path);
 }
 
