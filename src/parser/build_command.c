@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:31:49 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 10:17:38 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 12:11:33 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,7 +73,7 @@ static int	handle_redirection_token(t_token **ptoken, t_command *cmd,
 	if (!token->next || token->next->type != TOKEN_WORD)
 	{
 		if (error)
-			*error = strdup("syntax error near unexpected token 'newline'");
+			*error = strdup("syntax error near unexpected token `newline'");
 		return (-1);
 	}
 	if (consume_redirection_target(token, cmd) != 0)

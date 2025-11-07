@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:28:53 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 10:18:03 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/07 12:11:18 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,7 +24,7 @@ static int	validate_pipes(t_token *tokens, char **error)
 		return (0);
 	if (tokens->type == TOKEN_PIPE)
 	{
-		*error = strdup("Syntax error: unexpected '|'");
+		*error = strdup("syntax error near unexpected token `|'");
 		return (-1);
 	}
 	current = tokens;
@@ -33,7 +33,7 @@ static int	validate_pipes(t_token *tokens, char **error)
 		if (current->type == TOKEN_PIPE && current->next && current->next->type
 			== TOKEN_PIPE)
 		{
-			*error = strdup("Syntax error: unexpected '||'");
+			*error = strdup("syntax error near unexpected token `|'");
 			return (-1);
 		}
 		current = current->next;
