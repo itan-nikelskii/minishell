@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/19 09:38:23 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 10:17:09 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 23:24:48 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,23 +19,16 @@
  */
 static void	setup_child_pipes(int i, t_pipe_ctx *ctx)
 {
-	int	j;
-
-	if (i == 0)
-		dup2(ctx->pipes[0][1], STDOUT_FILENO);
-	else if (i == ctx->cmd_count - 1)
-		dup2(ctx->pipes[ctx->cmd_count - 2][0], STDIN_FILENO);
-	else
+	if (i > 0)
 	{
-		dup2(ctx->pipes[i - 1][0], STDIN_FILENO);
-		dup2(ctx->pipes[i][1], STDOUT_FILENO);
+		dup2(ctx->prev_pipe[0], STDIN_FILENO);
+		close_pipe_ends(ctx->prev_pipe);
 	}
-	j = 0;
-	while (j < ctx->cmd_count - 1)
+	if (i < ctx->cmd_count - 1)
 	{
-		close(ctx->pipes[j][0]);
-		close(ctx->pipes[j][1]);
-		j++;
+		close(ctx->next_pipe[0]);
+		dup2(ctx->next_pipe[1], STDOUT_FILENO);
+		close(ctx->next_pipe[1]);
 	}
 }
 
@@ -53,7 +46,7 @@ static pid_t	fork_and_exec(t_command *cmd, int i, t_pipe_ctx *ctx)
 	pid = fork();
 	if (pid == -1)
 	{
-		print_error("fork", "failed to create process");
+		perror("fork");
 		return (-1);
 	}
 	if (pid == 0)
@@ -65,36 +58,47 @@ static pid_t	fork_and_exec(t_command *cmd, int i, t_pipe_ctx *ctx)
 }
 
 /**
- * Fork all children for the pipeline
+ * Create next pipe for the pipeline if not the last command
+ * @param i Index of the command in the pipeline
  * @param ctx Pipeline context
- * @param cmd_list List of commands in the pipeline
  * @return 0 on success, -1 on error
  */
-static int	fork_all_children(t_pipe_ctx *ctx, t_command *cmd_list)
+static int	create_next_pipe(int i, t_pipe_ctx *ctx)
 {
-	t_command	*cur;
-	int			i;
-
-	cur = cmd_list;
-	i = 0;
-	while (i < ctx->cmd_count)
+	if (i < ctx->cmd_count - 1)
 	{
-		ctx->pids[i] = fork_and_exec(cur, i, ctx);
-		if (ctx->pids[i] == -1)
+		if (pipe(ctx->next_pipe) == -1)
 		{
-			close_all_pipes(ctx, ctx->cmd_count - 1);
-			while (--i >= 0)
-				waitpid(ctx->pids[i], NULL, 0);
+			perror("pipe");
 			return (-1);
 		}
-		cur = cur->next;
-		i++;
 	}
 	return (0);
 }
 
 /**
+ * Cleanup after pipeline execution
+ * @param ctx Pipeline context
+ * @param i Index up to which commands were forked
+ */
+static void	cleanup_pipeline(t_pipe_ctx *ctx, int i)
+{
+	int	j;
+
+	if (i > 0)
+		close_pipe_ends(ctx->prev_pipe);
+	j = 0;
+	while (j < i)
+	{
+		waitpid(ctx->pids[j], NULL, 0);
+		j++;
+	}
+	free(ctx->pids);
+}
+
+/**
  * Execute a pipeline with 2 or more commands
+ * Progressive pipe creation: only prev_pipe and next_pipe open at a time
  * @param cmd_list List of commands in the pipeline
  * @param shell Shell state
  * @return Exit status of the last command
@@ -102,23 +106,28 @@ static int	fork_all_children(t_pipe_ctx *ctx, t_command *cmd_list)
 int	execute_pipeline(t_command *cmd_list, t_shell *shell)
 {
 	t_pipe_ctx	ctx;
+	t_command	*cur;
+	int			i;
 	int			result;
 
-	ctx.cmd_count = count_commands(cmd_list);
-	ctx.shell = shell;
-	ctx.pipes = malloc(sizeof(int [2]) * (ctx.cmd_count - 1));
-	ctx.pids = malloc(sizeof(pid_t) * ctx.cmd_count);
-	if (!ctx.pipes || !ctx.pids)
-		return (free(ctx.pipes), free(ctx.pids), 1);
-	if (create_all_pipes(&ctx) == -1)
-		return (free(ctx.pipes), free(ctx.pids), 1);
+	if (init_pipeline_ctx(&ctx, cmd_list, shell) == -1)
+		return (1);
 	setup_parent_wait_signals();
-	if (fork_all_children(&ctx, cmd_list) == -1)
-		return (setup_parent_ps1_signals(), free(ctx.pipes), free(ctx.pids), 1);
-	close_all_pipes(&ctx, ctx.cmd_count - 1);
+	cur = cmd_list;
+	i = 0;
+	while (i < ctx.cmd_count)
+	{
+		if (create_next_pipe(i, &ctx) == -1)
+			return (cleanup_pipeline(&ctx, i), setup_parent_ps1_signals(), 1);
+		ctx.pids[i] = fork_and_exec(cur, i, &ctx);
+		if (ctx.pids[i] == -1)
+			return (cleanup_pipeline(&ctx, i), setup_parent_ps1_signals(), 1);
+		advance_pipes(i, &ctx);
+		cur = cur->next;
+		i++;
+	}
 	result = wait_all_children(ctx.pids, ctx.cmd_count);
 	setup_parent_ps1_signals();
-	free(ctx.pipes);
 	free(ctx.pids);
 	return (get_child_exit_status(result));
 }

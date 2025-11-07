@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 14:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 20:34:28 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -54,7 +54,8 @@
 typedef struct s_pipe_ctx
 {
 	int			cmd_count;
-	int			(*pipes)[2];
+	int			prev_pipe[2];
+	int			next_pipe[2];
 	pid_t		*pids;
 	t_shell		*shell;
 }	t_pipe_ctx;
@@ -72,11 +73,11 @@ int		execute_single_command(t_command *cmd, t_shell *shell);
 /* Pipeline executor (handles 2+ commands) */
 int		execute_pipeline(t_command *cmd_list, t_shell *shell);
 
-/* Pipeline utils */
-void	cleanup_pipes(int pipefd[2]);
-void	close_all_pipes(t_pipe_ctx *px, int count);
-int		create_all_pipes(t_pipe_ctx *px);
+/* Pipeline helpers */
 int		wait_all_children(pid_t *pids, int n);
+void	close_pipe_ends(int pipe_fd[2]);
+int		init_pipeline_ctx(t_pipe_ctx *ctx, t_command *cmd_list, t_shell *shell);
+void	advance_pipes(int i, t_pipe_ctx *ctx);
 
 /* External command executor (in child process) */
 int		exec_external_in_child(t_command *cmd, t_shell *shell);

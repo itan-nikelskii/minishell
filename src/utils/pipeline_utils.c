@@ -6,61 +6,53 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/19 10:52:47 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/28 20:00:28 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/07 23:24:56 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
 /**
- * Cleanup pipes in parent process
- * @param pipefd Array [read_end, write_end]
+ * Close both ends of a pipe
+ * @param pipe_fd Array [read_end, write_end]
  */
-void	cleanup_pipes(int pipefd[2])
+void	close_pipe_ends(int pipe_fd[2])
 {
-	close(pipefd[0]);
-	close(pipefd[1]);
+	close(pipe_fd[0]);
+	close(pipe_fd[1]);
 }
 
 /**
- * Close all pipes in the pipeline context
- * @param ctx Pipeline context
- * @param count Number of pipes
+ * Initialize pipeline context
+ * @param ctx Pipeline context to initialize
+ * @param cmd_list List of commands
+ * @param shell Shell state
+ * @return 0 on success, -1 on malloc failure
  */
-void	close_all_pipes(t_pipe_ctx *ctx, int count)
+int	init_pipeline_ctx(t_pipe_ctx *ctx, t_command *cmd_list, t_shell *shell)
 {
-	int	i;
-
-	i = 0;
-	while (i < count)
-	{
-		close(ctx->pipes[i][0]);
-		close(ctx->pipes[i][1]);
-		i++;
-	}
-}
-
-/**
- * Create all pipes needed for the pipeline
- * @param ctx Pipeline context
- * @return 0 on success, -1 on error
- */
-int	create_all_pipes(t_pipe_ctx *ctx)
-{
-	int	i;
-
-	i = 0;
-	while (i < ctx->cmd_count - 1)
-	{
-		if (pipe(ctx->pipes[i]) == -1)
-		{
-			print_error("pipe", "failed to create pipe");
-			close_all_pipes(ctx, i);
-			return (-1);
-		}
-		i++;
-	}
+	ctx->cmd_count = count_commands(cmd_list);
+	ctx->shell = shell;
+	ctx->pids = malloc(sizeof(pid_t) * ctx->cmd_count);
+	if (!ctx->pids)
+		return (-1);
 	return (0);
+}
+
+/**
+ * Close previous pipe and move next pipe to previous
+ * @param i Index of the command in the pipeline
+ * @param ctx Pipeline context
+ */
+void	advance_pipes(int i, t_pipe_ctx *ctx)
+{
+	if (i > 0)
+		close_pipe_ends(ctx->prev_pipe);
+	if (i < ctx->cmd_count - 1)
+	{
+		ctx->prev_pipe[0] = ctx->next_pipe[0];
+		ctx->prev_pipe[1] = ctx->next_pipe[1];
+	}
 }
 
 /**
