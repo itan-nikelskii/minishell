@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:36:27 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 09:33:19 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/08 19:40:46 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -130,6 +130,7 @@ int			append_str(t_dyn_buf *dynamic_buf, const char *s);
 int			append_char(t_dyn_buf *dynamic_buf, char c);
 int			is_word_char(char c);
 char		*strdup_range(const char *s, size_t from, size_t to);
+char		*build_redir_error(char bad_char);
 char		*get_exit_status_str(t_shell *shell);
 void		init_tok_context(t_tok_context *ctx, t_shell *shell, char **error,
 				size_t *i);

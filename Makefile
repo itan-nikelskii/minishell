@@ -6,7 +6,7 @@
 #    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/11/07 09:53:52 by inikelsk         ###   ########.fr        #
+#    Updated: 2025/11/08 19:41:29 by inikelsk         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -74,7 +74,8 @@ PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
               $(SRCDIR)/parser/redirection.c \
               $(SRCDIR)/parser/structs_and_tokens.c \
               $(SRCDIR)/parser/tokenize.c \
-              $(SRCDIR)/parser/utils_parser.c
+              $(SRCDIR)/parser/utils_parser.c \
+              $(SRCDIR)/parser/utils_string.c \
 
 # Signal sources
 SIGNAL_SRCS = $(SRCDIR)/signals/signals_child_ps2.c \
