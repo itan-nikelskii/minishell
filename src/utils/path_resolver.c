@@ -108,10 +108,12 @@ static char	*find_in_path(const char *cmd, char **env_paths)
 
 /**
  * Resolve command path
- * Handles three cases:
- * 1. Command with '/' → return as-is (let execve handle errors)
- * 2. Command without '/' → search in PATH
- * 3. PATH not found or command not in PATH → return NULL
+ * Handles five cases:
+ * 0. Command is "." or ".." → return NULL (bash treats these specially)
+ * 1. Command is "~" → expand to HOME (for bash compatibility)
+ * 2. Command with '/' → return as-is (let execve handle errors)
+ * 3. Command without '/' → search in PATH
+ * 4. PATH not found → try current dir, else NULL
  * @param command Command to resolve
  * @param envp Environment variables
  * @return Full path to executable, with fallback to "./command"
@@ -124,20 +126,24 @@ char	*resolve_path(char *command, char **envp)
 
 	if (!command || !*command)
 		return (NULL);
+	if (ft_strncmp(command, ".", 2) == 0 || ft_strncmp(command, "..", 3) == 0)
+		return (NULL);
+	if (ft_strncmp(command, "~", 2) == 0)
+	{
+		path = get_env_value("HOME", envp);
+		if (path)
+			return (ft_strdup(path));
+	}
 	if (ft_strchr(command, '/'))
 		return (command);
 	env_paths = get_env_paths(envp);
 	if (!env_paths)
 	{
 		path = build_full_path(".", command);
-		if (!path)
-			return (NULL);
-		if (access(path, X_OK) == 0)
+		if (path && access(path, X_OK) == 0)
 			return (path);
-		free(path);
-		return (NULL);
+		return (free(path), NULL);
 	}
 	path = find_in_path(command, env_paths);
-	free_array(env_paths);
-	return (path);
+	return (free_array(env_paths), path);
 }

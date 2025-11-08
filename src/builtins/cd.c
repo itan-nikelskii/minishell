@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 18:41:09 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 18:14:16 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/08 19:33:58 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,6 +76,7 @@ static char	*handle_dash(t_shell *shell, bool *is_dash)
  *           - arg_count>3: "cd -- a b c" → error "too many arguments"
  *       arg_count>2 → error (rejects "cd - /tmp", "cd /foo /bar")
  *       argv[1]=="-" → handle_dash() (OLDPWD, prints path)
+ *       argv[1]=="~" → HOME (tilde expansion)
  *       default → argv[1]
  * @param cmd Command structure with argv
  * @param shell Shell state with envp
@@ -98,6 +99,8 @@ static char	*resolve_cd_path(t_command *cmd, t_shell *shell, bool *is_dash)
 		return (print_error("cd", "too many arguments"), NULL);
 	if (ft_strncmp(path, "-", 2) == 0)
 		return (handle_dash(shell, is_dash));
+	if (ft_strncmp(path, "~", 2) == 0)
+		return (get_home_path(shell));
 	return (path);
 }
 

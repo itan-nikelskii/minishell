@@ -13,6 +13,22 @@
 #include "../../include/minishell.h"
 
 /**
+ * Print appropriate error message when command path not found
+ * @param cmd_name Command name
+ * @param envp Environment variables
+ */
+static void	print_path_not_found_error(char *cmd_name, char **envp)
+{
+	char	*pathenv;
+
+	pathenv = get_env_value("PATH", envp);
+	if (pathenv == NULL || pathenv[0] == '\0')
+		print_error(cmd_name, "No such file or directory");
+	else
+		print_error(cmd_name, "command not found");
+}
+
+/**
  * Execute command directly with execve (no fork)
  * This function never returns on success
  * Used in child processes after fork
@@ -22,7 +38,7 @@
 void	execve_or_die(t_command *cmd, t_shell *shell)
 {
 	char	*path;
-	char	*pathenv;
+	int		saved_errno;
 
 	if (!cmd->argv[0] || !*cmd->argv[0])
 	{
@@ -32,24 +48,16 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 	path = resolve_path(cmd->argv[0], shell->envp);
 	if (!path)
 	{
-		pathenv = get_env_value("PATH", shell->envp);
-		if (pathenv == NULL || pathenv[0] == '\0')
-			print_error(cmd->argv[0], "No such file or directory");
-		else
-			print_error(cmd->argv[0], "command not found");
+		print_path_not_found_error(cmd->argv[0], shell->envp);
 		cleanup_and_exit(shell, CMD_NOT_FOUND);
 	}
 	execve(path, cmd->argv, shell->envp);
-	{
-		int	saved_errno;
-
-		saved_errno = errno;
-		print_perror(cmd->argv[0], NULL);
-		if (path != cmd->argv[0])
-			free(path);
-		errno = saved_errno;
-		cleanup_and_exit(shell, map_execve_errno());
-	}
+	saved_errno = errno;
+	print_perror(cmd->argv[0], NULL);
+	if (path != cmd->argv[0])
+		free(path);
+	errno = saved_errno;
+	cleanup_and_exit(shell, map_execve_errno());
 }
 
 /**

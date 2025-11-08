@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   executor.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 14:00:22 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/08 23:57:30 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -115,8 +115,6 @@ static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
  */
 int	execute_single_command(t_command *cmd, t_shell *shell)
 {
-	int	exit_status;
-
 	if (!cmd)
 		return (0);
 	if (!cmd->argv || !cmd->argv[0])
@@ -133,13 +131,10 @@ int	execute_single_command(t_command *cmd, t_shell *shell)
 	if (is_builtin(cmd->argv[0]))
 	{
 		if (cmd->redirs)
-			exit_status = exec_builtin_in_parent(cmd, shell);
-		else
-			exit_status = execute_builtin(cmd, shell);
+			return (exec_builtin_in_parent(cmd, shell));
+		return (execute_builtin(cmd, shell));
 	}
-	else
-		exit_status = exec_external_in_child(cmd, shell);
-	return (exit_status);
+	return (exec_external_in_child(cmd, shell));
 }
 
 /**

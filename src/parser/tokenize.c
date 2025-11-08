@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   tokenize.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 19:40:16 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/08 22:03:20 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,11 +27,12 @@ static int	handle_pipe(size_t *i, t_tok_context *ctx)
 	return (0);
 }
 
-/* Create a redirection token and return 0 on success or -1 on failure. */
+/* Create a redirection token and return 0 on success or -1 on failure (FIX 52)
+ * (FIX 52: simplified error handling - direct index from
+ * create_token_redirection) */
 static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 {
 	int		ret_value;
-	char	bad_char;
 
 	ret_value = create_token_redirection(line, i, &ctx->list);
 	if (ret_value != 0)
@@ -39,10 +40,7 @@ static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 		if (ret_value == -1)
 			*(ctx->error) = ft_strdup("malloc failure");
 		else
-		{
-			bad_char = (unsigned char)(-(ret_value + 256));
-			*(ctx->error) = build_redir_error(bad_char);
-		}
+			*(ctx->error) = build_redir_error(line, ret_value - 1);
 		free_tokens(ctx->list.head);
 		return (-1);
 	}

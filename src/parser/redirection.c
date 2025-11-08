@@ -3,21 +3,21 @@
 /*                                                        :::      ::::::::   */
 /*   redirection.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:14:24 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 19:29:58 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/08 22:03:20 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/parser.h"
 
-/* Check for invalid redirection sequences:
+/* Check for invalid redirection sequences (FIX 52):
  * more than two redir signs in a row;
  * <>, ><, <|;
  * any valid redir sign followed by space(s) and another redir sign.
-Return the problematic character if found, '\0' otherwise. */
-static char	is_invalid_redir_sequence(const char *line, size_t i)
+Return: -1 = valid, >= 0 = index of problematic token (FIX 52: simplified) */
+static int	is_invalid_redir_sequence(const char *line, size_t i)
 {
 	size_t	j;
 	int		count;
@@ -29,21 +29,21 @@ static char	is_invalid_redir_sequence(const char *line, size_t i)
 	this = line[i];
 	next = line[i + 1];
 	if (this == '<' && next == '|')
-		return ('|');
+		return (i);
 	while (line[j] == '<' || line[j] == '>')
 	{
 		count++;
 		j++;
 	}
 	if (count > 2)
-		return (line[i + 2]);
+		return (i + 2);
 	if ((this == '<' && next == '>') || (this == '>' && next == '<'))
-		return (next);
+		return (i + 1);
 	while (ft_isspace(line[j]))
 		j++;
 	if (line[j] == '<' || line[j] == '>')
-		return (line[j]);
-	return ('\0');
+		return (j);
+	return (-1);
 }
 
 /* Advance the index *i by 1 or 2 depending on the redirection type. */
@@ -60,16 +60,17 @@ static void	advance_redir_index(const char *line, size_t *i)
 
 /* Handle the redirection (<, <<, >, >>, >|) chars: determine the redirection
 type, create a new token, append it to the token list, and update *i depending
-on the number of chars in the redirection type (1 or 2).
-Return 0 on success, -1 on malloc failure, or -(256 + char) on syntax error. */
+on the number of chars in the redirection type (1 or 2). (FIX 52)
+Return 0 on success, -1 on malloc failure, or (error_index + 1) for syntax error.
+(FIX 52: simplified - return index+1 to avoid ambiguity with success code 0) */
 int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 {
 	t_token	*token;
-	char	bad_char;
+	int		err_idx;
 
-	bad_char = is_invalid_redir_sequence(line, *i);
-	if (bad_char)
-		return (-(256 + (unsigned char)bad_char));
+	err_idx = is_invalid_redir_sequence(line, *i);
+	if (err_idx >= 0)
+		return (err_idx + 1);
 	if (line[*i] == '<')
 	{
 		if (line[*i + 1] && line[*i + 1] == '<')
