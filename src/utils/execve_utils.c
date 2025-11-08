@@ -40,10 +40,16 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 		cleanup_and_exit(shell, CMD_NOT_FOUND);
 	}
 	execve(path, cmd->argv, shell->envp);
-	print_perror(cmd->argv[0], NULL);
-	if (path != cmd->argv[0])
-		free(path);
-	cleanup_and_exit(shell, map_execve_errno());
+	{
+		int	saved_errno;
+
+		saved_errno = errno;
+		print_perror(cmd->argv[0], NULL);
+		if (path != cmd->argv[0])
+			free(path);
+		errno = saved_errno;
+		cleanup_and_exit(shell, map_execve_errno());
+	}
 }
 
 /**

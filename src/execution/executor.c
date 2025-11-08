@@ -158,6 +158,7 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
 {
 	pid_t	pid;
 	int		status;
+	int		exit_status;
 
 	setup_parent_wait_signals();
 	pid = fork();
@@ -174,5 +175,6 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
 		&& WTERMSIG(status) == SIGINT)
 		write(STDOUT_FILENO, "\n", 1);
 	setup_parent_ps1_signals();
-	return (get_child_exit_status(status));
+	exit_status = get_child_exit_status(status);
+	return (exit_status);
 }
