@@ -112,7 +112,6 @@ int		restore_std_fds(t_shell *shell);
 
 /* Heredoc preprocessing */
 int		prepare_heredocs(t_command *cmd, t_shell *shell);
-int		get_heredoc_counter(void);
 void	build_heredoc_filepath(char *filepath);
 char	*hd_expand_line(const char *line, t_shell *shell, bool expand);
 int		hd_append_str(char **buf, const char *str);
@@ -150,8 +149,6 @@ int		print_export_merged(t_shell *sh);
 void	print_error(char *prefix, char *msg);
 void	print_error_arg(char *prefix, char *arg, char *msg);
 void	print_perror(char *prefix, char *arg);
-void	cmd_error_exit(const char *cmd, const char *msg, int code);
-void	file_error_exit(const char *filename, int fd);
 
 /* Process utils */
 int		map_execve_errno(void);
@@ -164,7 +161,6 @@ void	exec_child_single(t_command *cmd, t_shell *shell);
 
 /* Command utils */
 int		count_commands(t_command *cmd_list);
-int		is_last_command(t_command *cmd);
 
 /* Array utils */
 int		count_array(char **array);
@@ -185,8 +181,6 @@ int		is_valid_exit_arg(const char *str, long long *out);
 
 /* Memory utils */
 void	free_array(char **array);
-void	free_cmd_list(t_command *cmd_list);
-void	free_redir_list(t_redir *redir_list);
 
 /* Shell lifecycle */
 t_shell	*shell_init(char **envp);
@@ -202,9 +196,7 @@ char	*read_input_line(t_shell *shell);
 
 void	setup_parent_ps1_signals(void);
 void	setup_parent_wait_signals(void);
-void	setup_exec_signals(void);
 void	setup_child_ps2_signals(void);
-void	reset_signals(void);
 
 /* ************************************************************************** */
 /*                              PARSER                                        */

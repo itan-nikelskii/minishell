@@ -77,7 +77,8 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 	int	out_fd;
 	int	status;
 
-	reset_signals();
+	signal(SIGINT, SIG_DFL);
+	signal(SIGQUIT, SIG_DFL);
 	shell->in_child = true;
 	in_fd = STDIN_FILENO;
 	out_fd = STDOUT_FILENO;

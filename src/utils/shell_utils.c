@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 11:23:55 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 14:43:27 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/09 19:42:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,4 +68,33 @@ void	cleanup_and_exit(t_shell *shell, int status)
 {
 	shell_cleanup(shell);
 	exit(status);
+}
+
+/**
+ * Map execve errno to shell-compatible exit codes
+ * @return Exit code corresponding to errno
+ */
+int	map_execve_errno(void)
+{
+	if (errno == EACCES || errno == ENOEXEC || errno == EISDIR
+		|| errno == ENOTDIR)
+		return (CMD_NOT_EXECUTABLE);
+	if (errno == ENOENT)
+		return (CMD_NOT_FOUND);
+	return (EXIT_FAILURE);
+}
+
+/**
+ * Extract exit status from child process status
+ * Handles both normal exit and signal termination
+ * @param status Status returned by waitpid()
+ * @return Exit code (0-255 for normal exit, 128+signal for signals)
+ */
+int	get_child_exit_status(int status)
+{
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	if (WIFSIGNALED(status))
+		return (128 + WTERMSIG(status));
+	return (EXIT_FAILURE);
 }

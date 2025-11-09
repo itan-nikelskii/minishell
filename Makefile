@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+         #
+#    By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/10/13 09:23:01 by acossari          #+#    #+#              #
-#    Updated: 2025/11/08 19:41:29 by inikelsk         ###   ########.fr        #
+#    Updated: 2025/11/09 19:42:04 by antoniocoss      ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -56,11 +56,12 @@ BUILTIN_SRCS = $(SRCDIR)/builtins/builtin_dispatcher.c \
 # Execution sources
 EXEC_SRCS = $(SRCDIR)/execution/continuation.c \
             $(SRCDIR)/execution/executor.c \
-            $(SRCDIR)/execution/heredoc_expand.c \
-            $(SRCDIR)/execution/heredoc_prepare.c \
+            $(SRCDIR)/execution/hd_expand.c \
+            $(SRCDIR)/execution/hd_prepare.c \
             $(SRCDIR)/execution/pipeline.c \
-            $(SRCDIR)/execution/redirections_backup.c \
-            $(SRCDIR)/execution/redirections.c
+            $(SRCDIR)/execution/redir_backup.c \
+            $(SRCDIR)/execution/redir_setup.c \
+            $(SRCDIR)/execution/signals.c
 
 # Parser sources
 PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
@@ -77,28 +78,18 @@ PARSER_SRCS = $(SRCDIR)/parser/buffer.c \
               $(SRCDIR)/parser/utils_parser.c \
               $(SRCDIR)/parser/utils_string.c \
 
-# Signal sources
-SIGNAL_SRCS = $(SRCDIR)/signals/signals_child_ps2.c \
-              $(SRCDIR)/signals/signals_parent_ps1.c \
-              $(SRCDIR)/signals/signals_parent_wait.c \
-              $(SRCDIR)/signals/signals.c
-
 # Utils sources
 UTILS_SRCS = $(SRCDIR)/utils/array_utils.c \
-             $(SRCDIR)/utils/cmd_utils.c \
              $(SRCDIR)/utils/env_utils.c \
-             $(SRCDIR)/utils/error_handler.c \
+             $(SRCDIR)/utils/error_utils.c \
              $(SRCDIR)/utils/execve_utils.c \
              $(SRCDIR)/utils/exit_utils.c \
              $(SRCDIR)/utils/export_utils.c \
-             $(SRCDIR)/utils/heredoc_expand_utils.c \
-             $(SRCDIR)/utils/heredoc_utils.c \
-             $(SRCDIR)/utils/input_utils.c \
-             $(SRCDIR)/utils/memory_utils.c \
-             $(SRCDIR)/utils/path_resolver.c \
+             $(SRCDIR)/utils/generic_utils.c \
+             $(SRCDIR)/utils/hd_expand_utils.c \
+             $(SRCDIR)/utils/hd_utils.c \
+             $(SRCDIR)/utils/path_utils.c \
              $(SRCDIR)/utils/pipeline_utils.c \
-             $(SRCDIR)/utils/process_utils.c \
-             $(SRCDIR)/utils/redir_utils.c \
              $(SRCDIR)/utils/search_utils.c \
              $(SRCDIR)/utils/shell_utils.c \
              $(SRCDIR)/utils/xenv_utils.c
@@ -107,8 +98,7 @@ UTILS_SRCS = $(SRCDIR)/utils/array_utils.c \
 MAIN_SRC = $(SRCDIR)/main.c
 
 # All sources
-SRCS = $(EXEC_SRCS) $(BUILTIN_SRCS) $(UTILS_SRCS) $(SIGNAL_SRCS) \
-       $(PARSER_SRCS) $(MAIN_SRC)
+SRCS = $(EXEC_SRCS) $(BUILTIN_SRCS) $(UTILS_SRCS) $(PARSER_SRCS) $(MAIN_SRC)
 
 # **************************************************************************** #
 #                              OBJECT FILES                                    #

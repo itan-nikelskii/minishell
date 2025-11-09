@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   error_handler.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 14:28:51 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/15 00:04:30 by acossari         ###   ########.fr       */
+/*   Updated: 2025/11/09 00:15:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -70,43 +70,4 @@ void	print_perror(char *prefix, char *arg)
 		ft_putstr_fd(": ", STDERR_FILENO);
 	}
 	perror(NULL);
-}
-
-/**
- * Print command error and exit with appropriate code
- * Used in child process after execve fails
- * @param cmd Command name that failed
- * @param msg Error message (NULL to use perror)
- * @param code Exit code
- */
-void	cmd_error_exit(const char *cmd, const char *msg, int code)
-{
-	ft_putstr_fd("minishell: ", STDERR_FILENO);
-	ft_putstr_fd((char *)cmd, STDERR_FILENO);
-	ft_putstr_fd(": ", STDERR_FILENO);
-	if (msg)
-	{
-		ft_putstr_fd((char *)msg, STDERR_FILENO);
-		ft_putstr_fd("\n", STDERR_FILENO);
-	}
-	else
-		perror(NULL);
-	exit(code);
-}
-
-/**
- * Print file error and exit
- * Used when file operations fail
- * @param filename File name for error
- * @param fd File descriptor to close (-1 if none)
- */
-void	file_error_exit(const char *filename, int fd)
-{
-	ft_putstr_fd("minishell: ", STDERR_FILENO);
-	ft_putstr_fd((char *)filename, STDERR_FILENO);
-	ft_putstr_fd(": ", STDERR_FILENO);
-	perror(NULL);
-	if (fd != -1)
-		close(fd);
-	exit(EXIT_FAILURE);
 }
