@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/09 20:30:32 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 21:00:07 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -188,9 +188,6 @@ void	free_array(char **array);
 t_shell	*shell_init(char **envp);
 int		shell_cleanup(t_shell *shell);
 void	cleanup_and_exit(t_shell *shell, int status);
-
-/* Input utils */
-char	*read_input_line(t_shell *shell);
 
 /* ************************************************************************** */
 /*                              SIGNALS                                       */

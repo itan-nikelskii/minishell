@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   utils_consolidated.c                               :+:      :+:    :+:   */
+/*   generic_utils.c                                    :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 15:18:29 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/09 19:01:27 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 21:00:07 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,28 +63,4 @@ void	cleanup_redir_fds(int in_fd, int out_fd)
 		close(in_fd);
 	if (out_fd != STDOUT_FILENO)
 		close(out_fd);
-}
-
-/**
- * Read input line based on interactive mode (FIX ISSUE 8 - Issue C)
- * @param shell: Shell state (to check interactive flag)
- * @return Line read from stdin, or NULL on EOF
- *
- * Uses readline() in interactive mode (with prompt + history)
- * Uses ft_get_next_line() in non-interactive (no echo, no prompt)
- */
-char	*read_input_line(t_shell *shell)
-{
-	char	*line;
-	size_t	len;
-
-	if (shell->interactive)
-		return (readline("minishell$ "));
-	line = ft_get_next_line(STDIN_FILENO);
-	if (!line)
-		return (NULL);
-	len = ft_strlen(line);
-	if (len > 0 && line[len - 1] == '\n')
-		line[len - 1] = '\0';
-	return (line);
 }

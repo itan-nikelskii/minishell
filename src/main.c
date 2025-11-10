@@ -6,26 +6,45 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/08 21:43:46 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 21:01:15 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
 
 /**
- * Handle parse error: print, cleanup, and set exit status (FIX 52)
+ * Read input line based on interactive mode
+ *   - Uses readline() in interactive mode (with prompt + history)
+ *   - Uses ft_get_next_line() in non-interactive (no echo, no prompt)
+ * @param shell: Shell state (to check interactive flag)
+ * @return Line read from stdin, or NULL on EOF/error
+ */
+static char	*read_input_line(t_shell *shell)
+{
+	char	*line;
+	size_t	len;
+
+	if (shell->interactive)
+		return (readline("minishell$ "));
+	line = ft_get_next_line(STDIN_FILENO);
+	if (!line)
+		return (NULL);
+	len = ft_strlen(line);
+	if (len > 0 && line[len - 1] == '\n')
+		line[len - 1] = '\0';
+	return (line);
+}
+
+/**
+ * Handle parse error: print, cleanup, and set exit status
  * @param result: Parse result with error info
  * @param line: Input line to free
  * @param shell: Shell state to set exit status
- * (FIX 52: print two lines like bash: error + original line)
  */
 static void	handle_parse_error(t_parse_result *result, char *line,
 		t_shell *shell)
 {
 	print_error(NULL, result->error);
-	ft_putstr_fd("minishell: line 1: `", STDERR_FILENO);
-	ft_putstr_fd(line, STDERR_FILENO);
-	ft_putstr_fd("'\n", STDERR_FILENO);
 	free(result->error);
 	free_commands(result->commands);
 	free(line);
@@ -36,6 +55,7 @@ static void	handle_parse_error(t_parse_result *result, char *line,
 
 /**
  * Process a single input line: parse and execute
+ * Handles PS2 prompt for incomplete pipes (trailing |) recursively
  * @param line: Input line from readline
  * @param shell: Shell state
  */
@@ -66,10 +86,10 @@ static void	process_line(char *line, t_shell *shell)
 }
 
 /**
- * Main read-eval-print loop
+ * Main read-eval-print loop (REPL)
  * @param shell: Shell state
  */
-static void	main_loop(t_shell *shell)
+static void	repl(t_shell *shell)
 {
 	char	*line;
 
@@ -113,7 +133,7 @@ int	main(int argc, char **argv, char **envp)
 	if (!shell)
 		return (ft_putstr_fd("minishell: init failed\n", STDERR_FILENO), 1);
 	setup_parent_ps1_signals();
-	main_loop(shell);
+	repl(shell);
 	if (shell->interactive)
 		ft_putstr_fd("exit\n", STDOUT_FILENO);
 	return (shell_cleanup(shell));

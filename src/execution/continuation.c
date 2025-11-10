@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 13:32:03 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/27 14:02:23 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 20:48:09 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,8 @@ static char	*read_continuation_from_pipe(int pipe_fd)
 
 /**
  * Join line and continuation with newline
- * Frees both input strings
+ * @param line: Original line
+ * @param continuation: Continuation line
  * @return Joined string or NULL on error
  */
 static char	*join_continuation(char *line, char *continuation)
@@ -73,6 +74,8 @@ static char	*join_continuation(char *line, char *continuation)
 
 /**
  * Fork child and handle result
+ * @param pipefd: Pipe for communication with child
+ * @param shell: Shell state
  * @return 0 on success, 130 on SIGINT, -1 on error
  */
 static int	fork_and_wait_child(int pipefd[2], t_shell *shell)
@@ -93,10 +96,9 @@ static int	fork_and_wait_child(int pipefd[2], t_shell *shell)
 }
 
 /**
- * Handle continuation prompt for incomplete pipe (PUBLIC API)
+ * Handle continuation prompt for incomplete pipe
  * Uses child process strategy for proper SIGINT handling
  * Switches signal profiles: PARENT-WAIT during fork, PS1 after
- * 
  * @param line: Initial line with trailing pipe
  * @param shell: Shell state
  * @return Complete line (line + "\n" + continuation), or NULL if Ctrl+D/Ctrl+C
@@ -113,7 +115,7 @@ char	*process_continuation(char *line, t_shell *shell)
 	child_status = fork_and_wait_child(pipefd, shell);
 	setup_parent_ps1_signals();
 	if (child_status == -1)
-		return (close(pipefd[0]), close(pipefd[1]), free(line), NULL);
+		return (close_pipe_ends(pipefd), free(line), NULL);
 	if (child_status == 130)
 		return (close(pipefd[0]), free(line), NULL);
 	continuation = read_continuation_from_pipe(pipefd[0]);
