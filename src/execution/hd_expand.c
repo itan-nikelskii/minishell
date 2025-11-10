@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   heredoc_expand.c                                   :+:      :+:    :+:   */
+/*   hd_expand.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/22 18:59:01 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 16:50:39 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 23:48:08 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,14 @@
  */
 static int	hd_expand_exit_status(size_t *j, char **buf, t_shell *shell)
 {
-	char	*exp;
+	char	*status_str;
 
-	exp = ft_itoa(shell->last_exit_status);
-	if (!exp)
+	status_str = ft_itoa(shell->last_exit_status);
+	if (!status_str)
 		return (-1);
-	if (hd_append_str(buf, exp) != 0)
-		return (free(exp), -1);
-	free(exp);
+	if (hd_append_str(buf, status_str) != 0)
+		return (free(status_str), -1);
+	free(status_str);
 	*j = *j + 2;
 	return (0);
 }
@@ -45,21 +45,20 @@ static int	hd_expand_variable(const char *str, size_t *j, char **buf,
 							t_shell *shell)
 {
 	char	*varname;
-	char	*exp;
+	char	*value;
 	size_t	i;
 
 	i = *j + 1;
 	varname = hd_extract_varname(str, i);
 	if (!varname)
 		return (-1);
-	exp = hd_getenv(shell, varname);
-	if (!exp)
-		return (free(varname), -1);
+	value = get_env_value(varname, shell->envp);
 	*j = i + ft_strlen(varname);
 	free(varname);
-	if (hd_append_str(buf, exp) != 0)
-		return (free(exp), -1);
-	free(exp);
+	if (!value)
+		return (0);
+	if (hd_append_str(buf, value) != 0)
+		return (-1);
 	return (0);
 }
 
@@ -94,11 +93,7 @@ static int	hd_expand_dollar(const char *str, size_t *j,
 /*
 ** heredoc line expansion rules (general)
 **
-** Behavior:
-** - If expand == false (quoted delimiter): return an exact copy of the line.
-** - If expand == true  (unquoted delimiter): expand $-patterns as below.
-**
-** Patterns handled when expand == true:
+** Patterns handled:
 ** 1) "$?"                -> replaced with last exit status (as decimal)
 **    ex:  "x$?y"         -> "x<status>y"
 **
@@ -129,20 +124,17 @@ static int	hd_expand_dollar(const char *str, size_t *j,
 
 /**
  * Expand variables in heredoc line
- * Expands $VAR and $? if expand flag is true
+ * Expands $VAR and $?
  * Quotes are treated as literal characters (no quote processing in heredoc)
  * @param line: Input line from heredoc
  * @param shell: Shell state
- * @param expand: If true, expand variables; if false, return copy
  * @return: Allocated expanded string or NULL on error
  */
-char	*hd_expand_line(const char *line, t_shell *shell, bool expand)
+char	*hd_expand_line(const char *line, t_shell *shell)
 {
 	char	*result;
 	size_t	i;
 
-	if (!expand)
-		return (ft_strdup(line));
 	result = ft_strdup("");
 	if (!result)
 		return (NULL);

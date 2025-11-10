@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 21:00:07 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 23:18:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -113,12 +113,10 @@ int		restore_std_fds(t_shell *shell);
 /* Heredoc preprocessing */
 int		prepare_heredocs(t_command *cmd, t_shell *shell);
 void	build_heredoc_filepath(char *filepath);
-char	*hd_expand_line(const char *line, t_shell *shell, bool expand);
+char	*hd_expand_line(const char *line, t_shell *shell);
 int		hd_append_str(char **buf, const char *str);
 int		hd_append_char(char **buf, char c);
-char	*hd_getenv(t_shell *shell, char *name);
 char	*hd_extract_varname(const char *str, size_t i);
-char	*read_heredoc_line(t_shell *shell);
 void	print_heredoc_eof_warning(char *delimiter);
 void	cleanup_prepared_heredocs(t_command *cmd);
 bool	too_many_heredocs(t_command *cmd);
@@ -162,6 +160,9 @@ void	exec_child_single(t_command *cmd, t_shell *shell);
 
 /* Command utils */
 int		count_commands(t_command *cmd_list);
+
+/* Input utils */
+char	*read_line_with_prompt(t_shell *shell, const char *prompt);
 
 /* Array utils */
 int		count_array(char **array);

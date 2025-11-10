@@ -6,34 +6,11 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 22:17:02 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 21:01:15 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 23:18:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../include/minishell.h"
-
-/**
- * Read input line based on interactive mode
- *   - Uses readline() in interactive mode (with prompt + history)
- *   - Uses ft_get_next_line() in non-interactive (no echo, no prompt)
- * @param shell: Shell state (to check interactive flag)
- * @return Line read from stdin, or NULL on EOF/error
- */
-static char	*read_input_line(t_shell *shell)
-{
-	char	*line;
-	size_t	len;
-
-	if (shell->interactive)
-		return (readline("minishell$ "));
-	line = ft_get_next_line(STDIN_FILENO);
-	if (!line)
-		return (NULL);
-	len = ft_strlen(line);
-	if (len > 0 && line[len - 1] == '\n')
-		line[len - 1] = '\0';
-	return (line);
-}
 
 /**
  * Handle parse error: print, cleanup, and set exit status
@@ -96,7 +73,7 @@ static void	repl(t_shell *shell)
 	while (1)
 	{
 		rl_on_new_line();
-		line = read_input_line(shell);
+		line = read_line_with_prompt(shell, "minishell$ ");
 		if (g_signal_received == SIGINT)
 		{
 			shell->last_exit_status = 130;

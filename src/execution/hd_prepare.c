@@ -1,25 +1,26 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   heredoc_prepare.c                                  :+:      :+:    :+:   */
+/*   hd_prepare.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/10/27 19:20:00 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/10/30 14:45:25 by antoniocoss      ###   ########.fr       */
+/*   Created: 2025/10/27 19:20:01 by antoniocoss       #+#    #+#             */
+/*   Updated: 2025/11/10 23:26:01 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
 /**
- * Heredoc read loop in child process
+ * Heredoc read loop (generic version returns exit code)
  * @param fd: File descriptor to write to
  * @param delimiter: Heredoc delimiter
  * @param shell: Shell state
  * @param expand: Whether to expand variables
+ * @return Exit code: 0 on success, 130 on SIGINT, 1 on error
  */
-static void	heredoc_read_loop(int fd, char *delimiter, t_shell *shell,
+static int	heredoc_read_loop(int fd, char *delimiter, t_shell *shell,
 		bool expand)
 {
 	char	*line;
@@ -27,35 +28,35 @@ static void	heredoc_read_loop(int fd, char *delimiter, t_shell *shell,
 
 	while (1)
 	{
-		line = read_heredoc_line(shell);
+		line = read_line_with_prompt(shell, "> ");
 		if (g_signal_received == SIGINT)
-			(free(line), close(fd), exit(130));
+			return (free(line), close(fd), 130);
 		if (!line)
-			(print_heredoc_eof_warning(delimiter), close(fd), exit(0));
+			return (print_heredoc_eof_warning(delimiter), close(fd), 0);
 		if (ft_strcmp(line, delimiter) == 0)
-			(free(line), close(fd), exit(0));
+			return (free(line), close(fd), 0);
 		if (expand)
 		{
-			expanded = hd_expand_line(line, shell, true);
-			(free(line), line = expanded);
-			if (!line)
-				(close(fd), exit(1));
+			expanded = hd_expand_line(line, shell);
+			free(line);
+			if (!expanded)
+				return (close(fd), 1);
+			line = expanded;
 		}
-		write(fd, line, ft_strlen(line));
-		write(fd, "\n", 1);
+		ft_putendl_fd(line, fd);
 		free(line);
 	}
 }
 
 /**
- * Spawn child to read heredoc (interactive mode only)
+ * Process heredoc in child (interactive mode only)
  * @param delimiter: Heredoc delimiter
  * @param expand: Whether to expand variables
  * @param tmp_path: Path to temp file
  * @param shell: Shell state
  * @return 0 on success, 130 on SIGINT, -1 on error
  */
-static int	spawn_heredoc_interactive(char *delimiter, bool expand,
+static int	process_heredoc_interactive(char *delimiter, bool expand,
 		char *tmp_path, t_shell *shell)
 {
 	pid_t	pid;
@@ -72,7 +73,7 @@ static int	spawn_heredoc_interactive(char *delimiter, bool expand,
 		fd = open(tmp_path, O_CREAT | O_EXCL | O_WRONLY, 0600);
 		if (fd == -1)
 			exit(1);
-		heredoc_read_loop(fd, delimiter, shell, expand);
+		exit(heredoc_read_loop(fd, delimiter, shell, expand));
 	}
 	waitpid(pid, &status, 0);
 	setup_parent_ps1_signals();
@@ -84,41 +85,26 @@ static int	spawn_heredoc_interactive(char *delimiter, bool expand,
 }
 
 /**
- * Read heredoc in parent (non-interactive mode only)
+ * Process heredoc in parent (non-interactive mode only)
  * @param delimiter: Heredoc delimiter
  * @param expand: Whether to expand variables
  * @param tmp_path: Path to temp file
  * @param shell: Shell state
  * @return 0 on success, -1 on error
  */
-static int	read_heredoc_noninteractive(char *delimiter, bool expand,
+static int	process_heredoc_noninteractive(char *delimiter, bool expand,
 		char *tmp_path, t_shell *shell)
 {
-	int		fd;
-	char	*line;
-	char	*expanded;
+	int	fd;
+	int	result;
 
 	fd = open(tmp_path, O_CREAT | O_EXCL | O_WRONLY, 0600);
 	if (fd == -1)
 		return (-1);
-	while (1)
-	{
-		line = read_heredoc_line(shell);
-		if (!line)
-			return (print_heredoc_eof_warning(delimiter), close(fd), 0);
-		if (ft_strcmp(line, delimiter) == 0)
-			return (free(line), close(fd), 0);
-		if (expand)
-		{
-			expanded = hd_expand_line(line, shell, true);
-			(free(line), line = expanded);
-			if (!line)
-				return (close(fd), -1);
-		}
-		write(fd, line, ft_strlen(line));
-		write(fd, "\n", 1);
-		free(line);
-	}
+	result = heredoc_read_loop(fd, delimiter, shell, expand);
+	if (result == 1)
+		return (-1);
+	return (0);
 }
 
 /**
@@ -136,11 +122,11 @@ static int	process_single_heredoc(t_redir *redir, t_shell *shell,
 
 	build_heredoc_filepath(tmp_path);
 	if (shell->interactive)
-		result = spawn_heredoc_interactive(redir->target, !redir->was_quoted,
-				tmp_path, shell);
+		result = process_heredoc_interactive(redir->target,
+				!redir->was_quoted, tmp_path, shell);
 	else
-		result = read_heredoc_noninteractive(redir->target, !redir->was_quoted,
-				tmp_path, shell);
+		result = process_heredoc_noninteractive(redir->target,
+				!redir->was_quoted, tmp_path, shell);
 	if (result == 130)
 		return (cleanup_prepared_heredocs(cmd), 130);
 	if (result != 0)

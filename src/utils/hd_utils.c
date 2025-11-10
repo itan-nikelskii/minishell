@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   heredoc_utils.c                                    :+:      :+:    :+:   */
+/*   hd_utils.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 10:37:18 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 14:35:09 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 23:18:00 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,45 +14,19 @@
 
 /**
  * Build the filepath for the heredoc temp file
+ * Uses static counter for unique names (bash-like behavior)
  * @param filepath: Buffer to store the generated filepath
  */
 void	build_heredoc_filepath(char *filepath)
 {
 	static int	counter = 0;
-	char		*prefix;
-	char		*pid_str;
 	char		*counter_str;
 
-	prefix = "/tmp/minishell_hd_";
-	pid_str = ft_itoa(getpid());
-	counter_str = ft_itoa(counter++);
-	ft_strlcpy(filepath, prefix, HD_PATH_BUFSZ);
-	ft_strlcat(filepath, pid_str, HD_PATH_BUFSZ);
-	ft_strlcat(filepath, "_", HD_PATH_BUFSZ);
+	counter_str = ft_itoa(counter);
+	counter++;
+	ft_strlcpy(filepath, "/tmp/.minishell_heredoc_", HD_PATH_BUFSZ);
 	ft_strlcat(filepath, counter_str, HD_PATH_BUFSZ);
-	free(pid_str);
 	free(counter_str);
-}
-
-/**
- * Read a line for heredoc (readline if interactive, GNL otherwise)
- * @param shell: Shell state
- * @return Line read, or NULL on EOF/error
- */
-char	*read_heredoc_line(t_shell *shell)
-{
-	char	*line;
-	size_t	len;
-
-	if (shell->interactive)
-		return (readline("> "));
-	line = ft_get_next_line(STDIN_FILENO);
-	if (!line)
-		return (NULL);
-	len = ft_strlen(line);
-	if (len > 0 && line[len - 1] == '\n')
-		line[len - 1] = '\0';
-	return (line);
 }
 
 /**

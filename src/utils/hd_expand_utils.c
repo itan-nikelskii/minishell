@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   heredoc_expand_utils.c                             :+:      :+:    :+:   */
+/*   hd_expand_utils.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/22 18:49:53 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/04 10:17:13 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 00:04:36 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,22 +43,6 @@ int	hd_append_char(char **buf, char c)
 	tmp[0] = c;
 	tmp[1] = '\0';
 	return (hd_append_str(buf, tmp));
-}
-
-/**
- * Get environment variable value (helper for heredoc expansion)
- * @param shell: Shell state with envp
- * @param name: Variable name to lookup
- * @return: Duplicated value or empty string if not found
- */
-char	*hd_getenv(t_shell *shell, char *name)
-{
-	char	*val;
-
-	val = get_env_value(name, shell->envp);
-	if (!val)
-		return (ft_strdup(""));
-	return (ft_strdup(val));
 }
 
 /**

@@ -6,14 +6,14 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/08 23:57:30 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 22:51:37 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
 
 /**
- * Prepare all heredocs for command list
+ * Prepare all heredocs for a list of commands
  * @param cmd_list Command list
  * @param shell Shell state
  * @return 0 on success, 130 on SIGINT, -1 on error
@@ -37,8 +37,7 @@ static int	prepare_all_heredocs(t_command *cmd_list, t_shell *shell)
 }
 
 /**
- * Main execution function
- * Decides if command is single or pipeline
+ * Execute command(s), handling pipelines and heredocs
  * @param cmd Command list to execute
  * @param shell Shell state
  * @return Exit status of last command
@@ -49,8 +48,6 @@ int	execute_command(t_command *cmd, t_shell *shell)
 	int	exit_status;
 	int	result;
 
-	if (!cmd || !shell)
-		return (1);
 	result = prepare_all_heredocs(cmd, shell);
 	if (result == -2)
 	{
@@ -103,41 +100,6 @@ static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
 }
 
 /**
- * Executes a single command (no pipeline)
- * Handles:
- *   - Builtins with/without redirections
- *   - External commands
- *   - Redirections-only (no command, e.g., >file)
- *
- * @param cmd Command to execute (argv may be NULL for redirections-only)
- * @param shell Shell state
- * @return Exit status
- */
-int	execute_single_command(t_command *cmd, t_shell *shell)
-{
-	if (!cmd)
-		return (0);
-	if (!cmd->argv || !cmd->argv[0])
-	{
-		if (cmd->redirs)
-			return (exec_builtin_in_parent(cmd, shell));
-		return (0);
-	}
-	if (cmd->argv[0][0] == '\0')
-	{
-		print_error(cmd->argv[0], "command not found");
-		return (127);
-	}
-	if (is_builtin(cmd->argv[0]))
-	{
-		if (cmd->redirs)
-			return (exec_builtin_in_parent(cmd, shell));
-		return (execute_builtin(cmd, shell));
-	}
-	return (exec_external_in_child(cmd, shell));
-}
-
-/**
  * Execute external command in child process (fork + execve)
  *
  * Process flow:
@@ -170,4 +132,39 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
 	setup_parent_ps1_signals();
 	exit_status = get_child_exit_status(status);
 	return (exit_status);
+}
+
+/**
+ * Executes a single command (no pipeline)
+ * Handles:
+ *   - Builtins with/without redirections
+ *   - External commands
+ *   - Redirections-only (no command, e.g., >file)
+ *
+ * @param cmd Command to execute (argv may be NULL for redirections-only)
+ * @param shell Shell state
+ * @return Exit status
+ */
+int	execute_single_command(t_command *cmd, t_shell *shell)
+{
+	if (!cmd)
+		return (0);
+	if (!cmd->argv || !cmd->argv[0])
+	{
+		if (cmd->redirs)
+			return (exec_builtin_in_parent(cmd, shell));
+		return (0);
+	}
+	if (cmd->argv[0][0] == '\0')
+	{
+		print_error(cmd->argv[0], "command not found");
+		return (127);
+	}
+	if (is_builtin(cmd->argv[0]))
+	{
+		if (cmd->redirs)
+			return (exec_builtin_in_parent(cmd, shell));
+		return (execute_builtin(cmd, shell));
+	}
+	return (exec_external_in_child(cmd, shell));
 }

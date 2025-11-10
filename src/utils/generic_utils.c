@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 15:18:29 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 21:00:07 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/10 23:17:58 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -63,4 +63,26 @@ void	cleanup_redir_fds(int in_fd, int out_fd)
 		close(in_fd);
 	if (out_fd != STDOUT_FILENO)
 		close(out_fd);
+}
+
+/**
+ * Read a line with optional prompt (readline if interactive, GNL otherwise)
+ * @param shell: Shell state
+ * @param prompt: Prompt to use with readline (ignored in non-interactive)
+ * @return Line read, or NULL on EOF/error
+ */
+char	*read_line_with_prompt(t_shell *shell, const char *prompt)
+{
+	char	*line;
+	size_t	len;
+
+	if (shell->interactive)
+		return (readline(prompt));
+	line = ft_get_next_line(STDIN_FILENO);
+	if (!line)
+		return (NULL);
+	len = ft_strlen(line);
+	if (len > 0 && line[len - 1] == '\n')
+		line[len - 1] = '\0';
+	return (line);
 }
