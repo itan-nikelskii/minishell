@@ -67,22 +67,16 @@ int	wait_all_children(pid_t *pids, int n)
 	int	i;
 	int	status;
 	int	last_status;
-	int	interrupted;
 
 	i = 0;
 	last_status = 0;
-	interrupted = 0;
 	while (i < n)
 	{
 		waitpid(pids[i], &status, 0);
-		if (!interrupted && WIFSIGNALED(status)
-			&& WTERMSIG(status) == SIGINT)
-			interrupted = 1;
 		if (i == n - 1)
 			last_status = status;
 		i++;
 	}
-	if (interrupted && isatty(STDIN_FILENO))
-		write(STDOUT_FILENO, "\n", 1);
+	print_signal_message(last_status);
 	return (last_status);
 }

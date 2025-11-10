@@ -166,9 +166,7 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
 	if (pid == 0)
 		exec_child_single(cmd, shell);
 	waitpid(pid, &status, 0);
-	if (isatty(STDIN_FILENO) && WIFSIGNALED(status)
-		&& WTERMSIG(status) == SIGINT)
-		write(STDOUT_FILENO, "\n", 1);
+	print_signal_message(status);
 	setup_parent_ps1_signals();
 	exit_status = get_child_exit_status(status);
 	return (exit_status);

@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 15:27:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 13:00:37 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/09 20:26:28 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -73,18 +73,10 @@ static char	*create_env_entry(char *key, char *value)
 static int	env_add(t_shell *shell, char *new_entry)
 {
 	char	**new_envp;
-	int		count;
-	int		i;
 
-	count = count_array(shell->envp);
-	new_envp = malloc(sizeof(char *) * (count + 2));
+	new_envp = array_add_entry(shell->envp, new_entry);
 	if (!new_envp)
 		return (-1);
-	i = -1;
-	while (++i < count)
-		new_envp[i] = shell->envp[i];
-	new_envp[i] = new_entry;
-	new_envp[i + 1] = NULL;
 	free(shell->envp);
 	shell->envp = new_envp;
 	return (0);
@@ -133,18 +125,14 @@ int	env_update(t_shell *shell, char *key, char *value)
 int	env_remove(t_shell *shell, char *key)
 {
 	int		key_idx;
-	int		count;
 	char	**new_env;
 
 	key_idx = find_env(shell->envp, key);
 	if (key_idx < 0)
 		return (0);
-	count = count_array(shell->envp);
-	new_env = malloc(sizeof(char *) * count);
+	new_env = array_remove_at(shell->envp, key_idx);
 	if (!new_env)
 		return (-1);
-	free(shell->envp[key_idx]);
-	array_copy_except(new_env, shell->envp, key_idx, count);
 	free(shell->envp);
 	shell->envp = new_env;
 	return (0);

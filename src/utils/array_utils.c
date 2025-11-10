@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/15 19:37:21 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 13:00:24 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/09 20:30:32 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -84,24 +84,68 @@ void	sort_env_array(char **env)
 }
 
 /**
- * Copy array elements except one at specified index
- * @param dest Destination array (must be pre-allocated)
- * @param src Source array
- * @param skip_idx Index to skip
- * @param total Total elements in source
+ * Remove element at specified index from NULL-terminated array
+ * Generic function used by both env_remove and xenv_remove
+ * @param array Original array to modify
+ * @param index Index of element to remove
+ * @return New array with element removed, or NULL on error
+ * @note Caller must free the old array after successful removal
  */
-void	array_copy_except(char **dest, char **src, int skip_idx, int total)
+char	**array_remove_at(char **array, int index)
 {
-	int	i;
-	int	j;
+	char	**new_array;
+	int		count;
+	int		i;
+	int		j;
 
+	if (!array || index < 0)
+		return (NULL);
+	count = count_array(array);
+	if (index >= count)
+		return (NULL);
+	new_array = malloc(sizeof(char *) * count);
+	if (!new_array)
+		return (NULL);
+	free(array[index]);
 	i = 0;
 	j = 0;
-	while (i < total)
+	while (i < count)
 	{
-		if (i != skip_idx)
-			dest[j++] = src[i];
+		if (i != index)
+			new_array[j++] = array[i];
 		i++;
 	}
-	dest[j] = NULL;
+	new_array[j] = NULL;
+	return (new_array);
+}
+
+/**
+ * Add entry to NULL-terminated array
+ * Generic function used by both env_add and xenv_add
+ * @param array Original array to expand
+ * @param new_entry New entry to add (must be already allocated)
+ * @return New array with entry added, or NULL on error
+ * @note Caller must free the old array after successful addition
+ */
+char	**array_add_entry(char **array, char *new_entry)
+{
+	char	**new_array;
+	int		count;
+	int		i;
+
+	if (!new_entry)
+		return (NULL);
+	count = count_array(array);
+	new_array = malloc(sizeof(char *) * (count + 2));
+	if (!new_array)
+		return (NULL);
+	i = 0;
+	while (i < count)
+	{
+		new_array[i] = array[i];
+		i++;
+	}
+	new_array[i] = new_entry;
+	new_array[i + 1] = NULL;
+	return (new_array);
 }

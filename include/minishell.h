@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 20:34:28 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/09 20:30:32 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -149,6 +149,7 @@ int		print_export_merged(t_shell *sh);
 void	print_error(char *prefix, char *msg);
 void	print_error_arg(char *prefix, char *arg, char *msg);
 void	print_perror(char *prefix, char *arg);
+void	print_signal_message(int status);
 
 /* Process utils */
 int		map_execve_errno(void);
@@ -166,7 +167,8 @@ int		count_commands(t_command *cmd_list);
 int		count_array(char **array);
 int		keycmp(const char *a, const char *b);
 void	sort_env_array(char **env);
-void	array_copy_except(char **dest, char **src, int skip_idx, int total);
+char	**array_remove_at(char **array, int index);
+char	**array_add_entry(char **array, char *new_entry);
 
 /* Redirection utils */
 void	cleanup_redir_fds(int in_fd, int out_fd);
