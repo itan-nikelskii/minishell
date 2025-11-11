@@ -3,20 +3,20 @@
 /*                                                        :::      ::::::::   */
 /*   redirection.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:14:24 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 22:03:20 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 09:32:41 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/parser.h"
 
-/* Check for invalid redirection sequences (FIX 52):
+/* Check for invalid redirection sequences:
  * more than two redir signs in a row;
  * <>, ><, <|;
  * any valid redir sign followed by space(s) and another redir sign.
-Return: -1 = valid, >= 0 = index of problematic token (FIX 52: simplified) */
+Return values: -1 = valid, >= 0 = index of problematic token. */
 static int	is_invalid_redir_sequence(const char *line, size_t i)
 {
 	size_t	j;
@@ -60,9 +60,8 @@ static void	advance_redir_index(const char *line, size_t *i)
 
 /* Handle the redirection (<, <<, >, >>, >|) chars: determine the redirection
 type, create a new token, append it to the token list, and update *i depending
-on the number of chars in the redirection type (1 or 2). (FIX 52)
-Return 0 on success, -1 on malloc failure, or (error_index + 1) for syntax error.
-(FIX 52: simplified - return index+1 to avoid ambiguity with success code 0) */
+on the number of chars in the redirection type (1 or 2). Return 0 on success, 
+-1 on malloc fail, or (error_index + 1) for syntax error. */
 int	create_token_redirection(const char *line, size_t *i, t_token_list *list)
 {
 	t_token	*token;

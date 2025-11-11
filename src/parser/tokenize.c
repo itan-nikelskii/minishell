@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   tokenize.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/30 09:24:37 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 22:03:20 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 11:39:24 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,9 +27,7 @@ static int	handle_pipe(size_t *i, t_tok_context *ctx)
 	return (0);
 }
 
-/* Create a redirection token and return 0 on success or -1 on failure (FIX 52)
- * (FIX 52: simplified error handling - direct index from
- * create_token_redirection) */
+/* Create a redirection token and return 0 on success or -1 on failure. */
 static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 {
 	int		ret_value;
@@ -48,7 +46,9 @@ static int	handle_redir(const char *line, size_t *i, t_tok_context *ctx)
 }
 
 /* Create a word token, differentiate between that word being part of a command
-   or a HEREDOC delimiter. Return 0 on success or -1 on failure. */
+   or a HEREDOC delimiter. Special case when the previous token was a HEREDOC:
+   pass shell == NULL to disable expansions for the delimiter. 
+   Return 0 on success or -1 on failure. */
 static int	handle_word(const char *line, size_t *i, t_tok_context *ctx)
 {
 	int	status;

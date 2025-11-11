@@ -3,18 +3,17 @@
 /*                                                        :::      ::::::::   */
 /*   utils_parser.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:02:43 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 21:37:40 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 09:35:16 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/parser.h"
 
-/* Build bash-style error message with specific token (FIX 48, FIX 52)
- * Reads 1 or 2 chars from line[i]: if doubled (<<, >>), show both.
- * Otherwise show single char. (FIX 52: simplified - direct index) */
+/* Build bash-style error message with specific token. Read 1 or 2 chars from 
+ * line[i]: if doubled (<<, >>), show both; otherwise show single char. */
 char	*build_redir_error(const char *line, size_t i)
 {
 	char	token_str[50];
