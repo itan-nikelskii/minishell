@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/15 12:52:08 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/21 13:01:16 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 22:48:41 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,6 +14,10 @@
 
 /**
  * Check if a string is a valid export identifier
+ * A valid identifier starts with a letter or underscore, followed by letters,
+ * digits, or underscores, and may optionally include an '=' sign after the name.
+ * Examples: valid: VAR, _VAR, VAR123, VAR=VALUE
+ *          invalid: 123VAR, VAR-TEST, VAR TEST
  * @param str The string to check
  * @return true if valid, false otherwise
  */
@@ -21,7 +25,7 @@ bool	is_valid_export_identifier(char *str)
 {
 	int	i;
 
-	if (!str || !*str)
+	if (!str)
 		return (false);
 	if (!ft_isalpha(str[0]) && str[0] != '_')
 		return (false);
@@ -58,30 +62,6 @@ void	print_export_line(char *env_var)
 }
 
 /**
- * Merge envp and xenv arrays into a single sorted array
- * @param output The output array to fill (must be preallocated)
- * @param envp The environment variables array
- * @param xenv The exported names without values array
- * @param env_count The number of elements in envp
- */
-static void	merge_arrays(char **output, char **envp, char **xenv, int env_count)
-{
-	int	i;
-	int	j;
-
-	i = 0;
-	while (i < env_count)
-	{
-		output[i] = envp[i];
-		i++;
-	}
-	j = 0;
-	while (xenv[j] && xenv[j])
-		output[i++] = xenv[j++];
-	output[i] = NULL;
-}
-
-/**
  * Build a merged and sorted export array from envp and xenv
  * @param envp The environment variables array
  * @param xenv The exported names without values array
@@ -92,13 +72,24 @@ static char	**build_export_vector(char **envp, char **xenv)
 	int		env_count;
 	int		xenv_count;
 	char	**merged;
+	int		i;
+	int		j;
 
 	env_count = count_array(envp);
 	xenv_count = count_array(xenv);
 	merged = malloc(sizeof(char *) * (env_count + xenv_count + 1));
 	if (!merged)
 		return (NULL);
-	merge_arrays(merged, envp, xenv, env_count);
+	i = 0;
+	while (i < env_count)
+	{
+		merged[i] = envp[i];
+		i++;
+	}
+	j = 0;
+	while (j < xenv_count)
+		merged[i++] = xenv[j++];
+	merged[i] = NULL;
 	sort_env_array(merged);
 	return (merged);
 }

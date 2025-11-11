@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 23:23:48 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/11/09 20:26:28 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 23:28:28 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,25 +15,18 @@
 /**
  * Add a key to the xenv array if it doesn't already exist
  * @param shell The shell structure containing xenv
- * @param key The key to add
+ * @param key The key to add (must be already allocated)
  * @return 0 on success, -1 on memory allocation failure
  */
-int	xenv_add(t_shell *shell, const char *key)
+int	xenv_add(t_shell *shell, char *key)
 {
-	char	*key_dup;
 	char	**new_xenv;
 
-	if (!key || find_xenv(shell->xenv, key) >= 0)
-		return (0);
-	key_dup = ft_strdup(key);
-	if (!key_dup)
-		return (-1);
-	new_xenv = array_add_entry(shell->xenv, key_dup);
+	if (find_xenv(shell->xenv, key) >= 0)
+		return (free(key), 0);
+	new_xenv = array_add_entry(shell->xenv, key);
 	if (!new_xenv)
-	{
-		free(key_dup);
 		return (-1);
-	}
 	free(shell->xenv);
 	shell->xenv = new_xenv;
 	return (0);

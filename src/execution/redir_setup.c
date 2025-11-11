@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 09:28:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/11 13:57:46 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 00:11:26 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -62,7 +62,7 @@ static int	process_redir(t_redir *redir, int *in_fd, int *out_fd)
 	else if (redir->type == TOKEN_REDIR_APPEND)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
 	if (fd == -1 && redir->type != TOKEN_HEREDOC)
-		return(print_perror(NULL, redir->target), -1);
+		return (print_perror(NULL, redir->target), -1);
 	if (redir->type == TOKEN_HEREDOC || redir->type == TOKEN_REDIR_IN)
 		update_fd(in_fd, fd, STDIN_FILENO);
 	else

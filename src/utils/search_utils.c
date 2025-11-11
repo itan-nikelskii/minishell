@@ -25,8 +25,6 @@ int	find_in_array(char **arr, const char *key, bool require_equal)
 	int		i;
 	size_t	len;
 
-	if (!arr || !key)
-		return (-1);
 	len = ft_strlen(key);
 	i = 0;
 	while (arr[i])

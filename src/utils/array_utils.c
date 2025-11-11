@@ -28,10 +28,13 @@ int	count_array(char **array)
 }
 
 /**
- * Compare two environment variable keys (before '=')
- * @param a First string (KEY=VALUE or KEY)
- * @param b Second string (KEY=VALUE or KEY)
- * @return < 0 if a < b, 0 if equal, > 0 if a > b
+ * Compare environment variable keys lexicographically
+ * Stops at '=' or end of string, ignores values
+ * Examples: keycmp("PATH=/bin", "HOME=/root") → positive (P > H)
+ *           keycmp("TEST", "TEST=hello") → 0 (same key)
+ * @param a First env string
+ * @param b Second env string
+ * @return Negative if a<b, 0 if equal, positive if a>b
  */
 int	keycmp(const char *a, const char *b)
 {
@@ -98,8 +101,6 @@ char	**array_remove_at(char **array, int index)
 	int		i;
 	int		j;
 
-	if (!array || index < 0)
-		return (NULL);
 	count = count_array(array);
 	if (index >= count)
 		return (NULL);
@@ -133,8 +134,6 @@ char	**array_add_entry(char **array, char *new_entry)
 	int		count;
 	int		i;
 
-	if (!new_entry)
-		return (NULL);
 	count = count_array(array);
 	new_array = malloc(sizeof(char *) * (count + 2));
 	if (!new_array)

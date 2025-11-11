@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/19 09:38:23 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 23:24:48 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 20:13:31 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,9 +26,8 @@ static void	setup_child_pipes(int i, t_pipe_ctx *ctx)
 	}
 	if (i < ctx->cmd_count - 1)
 	{
-		close(ctx->next_pipe[0]);
 		dup2(ctx->next_pipe[1], STDOUT_FILENO);
-		close(ctx->next_pipe[1]);
+		close_pipe_ends(ctx->next_pipe);
 	}
 }
 
@@ -99,6 +98,8 @@ static void	cleanup_pipeline(t_pipe_ctx *ctx, int i)
 /**
  * Execute a pipeline with 2 or more commands
  * Progressive pipe creation: only prev_pipe and next_pipe open at a time
+ * This avoids EMFILE by not exceeding FD limits (e.g., 1024 max)
+ * since each pipe uses 2 FDs; >512 cmd pipelines fail on EMFILE otherwise
  * @param cmd_list List of commands in the pipeline
  * @param shell Shell state
  * @return Exit status of the last command

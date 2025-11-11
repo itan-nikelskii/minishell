@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 11:09:53 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 20:27:59 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,39 +15,40 @@
 /**
  * Check if a string is a valid -n flag for echo
  * Valid flags are: -n, -nn, -nnn, ...
- * @param s String to check
+ * @param str String to check
  * @return 1 if valid -n flag, 0 otherwise
  */
-static int	is_nflag(const char *s)
+static int	is_nflag(const char *str)
 {
 	int	i;
 
-	if (!s || s[0] != '-' || s[1] == '\0')
+	if (!str || str[0] != '-' || str[1] == '\0')
 		return (0);
 	i = 1;
-	while (s[i] == 'n')
+	while (str[i] == 'n')
 		i++;
-	return (s[i] == '\0');
+	return (str[i] == '\0');
 }
 
 /**
  * Builtin: echo
  * Prints arguments separated by space, with optional newline
+ * -n flag suppresses the trailing newline
  * @param cmd Command structure with argv
  * @param shell Shell state (unused)
  * @return Always 0 (echo never fails)
  */
 int	builtin_echo(t_command *cmd, t_shell *shell)
 {
-	int	i;
-	int	newline;
+	int		i;
+	bool	newline;
 
 	(void)shell;
 	i = 1;
-	newline = 1;
+	newline = true;
 	while (cmd->argv[i] && is_nflag(cmd->argv[i]))
 	{
-		newline = 0;
+		newline = false;
 		i++;
 	}
 	while (cmd->argv[i])

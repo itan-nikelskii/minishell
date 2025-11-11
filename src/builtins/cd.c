@@ -31,23 +31,6 @@ static char	*get_home_path(t_shell *shell)
 }
 
 /**
- * Handle the '--' argument for cd: change to home directory
- * @param cmd Command structure with argv
- * @param shell Shell state with envp
- * @param arg_count Number of arguments in cmd->argv
- * @return Target path for cd, or NULL on error
- */
-static char	*handle_double_dash(t_command *cmd, t_shell *shell, int arg_count)
-{
-	if (arg_count == 2)
-		return (get_home_path(shell));
-	if (arg_count == 3)
-		return (cmd->argv[2]);
-	print_error("cd", "too many arguments");
-	return (NULL);
-}
-
-/**
  * Handle the '-' argument for cd: change to previous directory
  * @param shell Shell state with envp
  * @param is_dash Pointer to bool that will be set to true if path is '-'
@@ -70,12 +53,8 @@ static char	*handle_dash(t_shell *shell, bool *is_dash)
 /**
  * Determine the target path for the cd command based on arguments.
  * Flow: arg_count==1 → HOME
- *       argv[1]=="--" → handle_double_dash():
- *           - arg_count==2: "cd --" → HOME
- *           - arg_count==3: "cd -- /tmp" → /tmp
- *           - arg_count>3: "cd -- a b c" → error "too many arguments"
- *       arg_count>2 → error (rejects "cd - /tmp", "cd /foo /bar")
- *       argv[1]=="-" → handle_dash() (OLDPWD, prints path)
+ *       arg_count>2 → error "too many arguments"
+ *       argv[1]=="-" → OLDPWD (prints path)
  *       argv[1]=="~" → HOME (tilde expansion)
  *       default → argv[1]
  * @param cmd Command structure with argv
@@ -92,11 +71,9 @@ static char	*resolve_cd_path(t_command *cmd, t_shell *shell, bool *is_dash)
 	*is_dash = false;
 	if (arg_count == 1)
 		return (get_home_path(shell));
-	path = cmd->argv[1];
-	if (ft_strncmp(path, "--", 3) == 0)
-		return (handle_double_dash(cmd, shell, arg_count));
 	if (arg_count > 2)
 		return (print_error("cd", "too many arguments"), NULL);
+	path = cmd->argv[1];
 	if (ft_strncmp(path, "-", 2) == 0)
 		return (handle_dash(shell, is_dash));
 	if (ft_strncmp(path, "~", 2) == 0)

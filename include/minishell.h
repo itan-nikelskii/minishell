@@ -141,7 +141,7 @@ void	print_export_line(char *env_var);
 bool	is_valid_export_identifier(char *str);
 
 /* export: xenv and print-merge */
-int		xenv_add(t_shell *sh, const char *key);
+int		xenv_add(t_shell *sh, char *key);
 int		xenv_remove(t_shell *sh, const char *key);
 int		print_export_merged(t_shell *sh);
 
@@ -179,9 +179,6 @@ void	cleanup_redir_fds(int in_fd, int out_fd);
 int		find_in_array(char **arr, const char *key, bool require_equal);
 int		find_env(char **envp, char *key);
 int		find_xenv(char **xenv, const char *key);
-
-/* Exit utils */
-int		is_valid_exit_arg(const char *str, long long *out);
 
 /* Memory utils */
 void	free_array(char **array);

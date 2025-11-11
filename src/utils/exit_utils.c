@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exit_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: acossari <acossari@student.42.fr>          +#+  +:+       +#+        */
+/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 11:38:57 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/16 18:22:48 by acossari         ###   ########.fr       */
+/*   Updated: 2025/11/12 00:10:24 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,10 +49,10 @@ int	is_valid_exit_arg(const char *str, long long *out)
 	int			digit;
 	long long	acc;
 
-	if (!str || !*str)
-		return (0);
 	i = parse_sign(str, &sign);
 	if (i == -1)
+		return (0);
+	if (str[i] == '\0')
 		return (0);
 	acc = 0;
 	while (str[i])

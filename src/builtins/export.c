@@ -6,27 +6,11 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 16:18:34 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/07 19:04:39 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 23:28:49 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../include/minishell.h"
-
-/**
- * Handle the export command line options.
- * @param arg The argument to check.
- * @return 0 if no option, 1 if long option, -1 if invalid.
- */
-static int	handle_export_option(char *arg)
-{
-	if (arg[0] != '-')
-		return (0);
-	if (ft_strncmp(arg, "--", 3) == 0)
-		return (1);
-	print_error_arg("export", arg, "invalid option");
-	ft_putendl_fd("export: usage: export [name[=value] ...]", STDERR_FILENO);
-	return (-1);
-}
 
 /**
  * Export a variable without a value (only key).
@@ -36,9 +20,16 @@ static int	handle_export_option(char *arg)
  */
 static int	export_without_value(char *key, t_shell *shell)
 {
+	char	*key_dup;
+
 	if (find_env(shell->envp, key) >= 0)
 		return (0);
-	return (xenv_add(shell, key) == -1);
+	key_dup = ft_strdup(key);
+	if (!key_dup)
+		return (1);
+	if (xenv_add(shell, key_dup) == -1)
+		return (free(key_dup), 1);
+	return (0);
 }
 
 /**
@@ -71,10 +62,6 @@ static int	process_export_arg(char *arg, t_shell *shell)
 {
 	char	*equal_sign;
 
-	if (!arg || !*arg)
-		return (1);
-	if (handle_export_option(arg) == -1)
-		return (1);
 	if (!is_valid_export_identifier(arg))
 	{
 		print_error_arg("export", arg, "not a valid identifier");
@@ -87,81 +74,27 @@ static int	process_export_arg(char *arg, t_shell *shell)
 		return (export_without_value(arg, shell));
 }
 
-/*
-** EXPORT behavior (bash-like) – quick reference
-**
-** Printing:
-** - `export` with no args prints the sorted union of:
-**   - envp entries (KEY=VALUE)
-**   - xenv entries (bare KEY without '=')
-**   Format: `declare -x KEY="VALUE"` or `declare -x KEY`
-**   Note: `export` output is sorted by KEY; `env` is not sorted.
-**
-** Cases:
-** 1) export KEY           (no '=')
-**    - If KEY exists in envp: do nothing.
-**    - Else: add KEY to xenv (tracked as "bare"). Not passed to execve.
-**    - `export` shows:  declare -x KEY
-**    - `env` shows:     (nothing for KEY)
-**
-** 2) export KEY=          (empty value)
-**    - Set/overwrite envp with KEY="" (i.e., "KEY=").
-**    - Remove KEY from xenv if present.
-**    - `export` shows:  declare -x KEY=""
-**    - `env` shows:     KEY=
-**
-** 3) export KEY=VALUE
-**    - Set/overwrite envp with KEY=VALUE.
-**    - Remove KEY from xenv if present.
-**    - `export` shows:  declare -x KEY="VALUE"
-**    - `env` shows:     KEY=VALUE
-**
-** Additional notes:
-** - Invalid identifiers (first char not [A-Za-z_], or chars outside
-**   [A-Za-z0-9_]) trigger:
-**     minishell: export: `ARG': not a valid identifier
-**   Exit status becomes 1, but remaining args are processed.
-** - Duplicate args are processed left→right; last assignment wins.
-** - Unsupported flags (e.g., -p, -n) and `KEY+=VAL` are treated as invalid.
-** - Only envp is inherited by children (execve). xenv is internal tracking.
-**
-** Examples:
-**   $ export KEY1
-**   $ export KEY2=
-**   $ export KEY3=test
-**
-**   $ env
-**   ...              (order not guaranteed)
-**   KEY2=
-**   KEY3=test
-**
-**   $ export
-**   declare -x KEY1
-**   declare -x KEY2=""
-**   declare -x KEY3="test"   (sorted by key)
-*/
-
 /**
- * Builtin command: export
- * Handles exporting environment variables.
- * @param cmd The command structure containing arguments.
- * @param shell The shell structure containing environment variables.
- * @return Exit status (0 on success, 1 on error).
-*/
+ * Builtin: export
+ * Behavior:
+ *   export          → print sorted "declare -x name[=value]" (envp + xenv)
+ *   export name     → add to xenv if not in envp (not passed to children)
+ *   export name=val → add/update envp, remove from xenv (passed to children)
+ * Examples:
+ *   export TEST        → xenv only (not in env output)
+ *   export TEST=hello  → envp (shows in env output)
+ * @param cmd Command structure with arguments
+ * @param shell Shell state
+ * @return 0 on success, 1 if any argument failed
+ */
 int	builtin_export(t_command *cmd, t_shell *shell)
 {
 	int	i;
 	int	exit_status;
-	int	opt_result;
 
 	if (!cmd->argv[1])
 		return (print_export_merged(shell), 0);
 	i = 1;
-	opt_result = handle_export_option(cmd->argv[i]);
-	if (opt_result == -1)
-		return (2);
-	if (opt_result == 1)
-		i++;
 	exit_status = 0;
 	while (cmd->argv[i])
 	{

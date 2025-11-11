@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 12:43:11 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/11/06 14:43:35 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 00:08:53 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -58,7 +58,7 @@ static void	exit_invalid_arg(const char *arg_orig, t_command *cmd,
 }
 
 /**
- * Handle exit with too many arguments (FIX ISSUE 8.2)
+ * Handle exit with too many arguments
  * @param shell Shell state
  * @return Always returns 1
  */
@@ -70,43 +70,19 @@ static int	exit_too_many_args(t_shell *shell)
 	return (1);
 }
 
-/*
-** EXIT — Behavior and design notes
-**
-** Cases and exit codes:
-**  - exit → prints "exit" and terminates with last_exit_status
-**  - exit <num> (valid parse) → prints "exit" and terminates with
-**    (unsigned char)<num>
-**  - exit <non-num> → prints "exit" + "numeric argument required"
-**    to stderr and TERMINATES with exit code 2
-**  - exit <num> <extra> → prints "exit" + "too many arguments"
-**    to stderr, does NOT terminate the shell, returns 1
-**
-** Strict parsing:
-**  - Accepts only: optional [ + | - ] followed by >=1 digits
-**    (no spaces, no extra chars).
-**  - Builds the absolute value as positive, checking for overflow
-**    BEFORE acc * 10 + digit.
-**  - If the operation would exceed LLONG_MAX → INVALID (treated as
-**    non-numeric).
-**
-** Design choice regarding LLONG_MIN:
-**  - We intentionally do NOT handle the special case
-**    "-9223372036854775808" (|LLONG_MIN| = LLONG_MAX + 1).
-**  - That string is rejected by the parser as overflow →
-**    "numeric argument required", exit 2.
-**  - Note: some bash versions accept LLONG_MIN; we deliberately keep
-**    a strict implementation.
-**
-** "exit" printing:
-**  - Printed whenever the builtin exits or reports a user error on
-**    exit usage.
-**  - Should NOT be printed in child processes or pipelines when the
-**    main shell stays alive; this policy is handled at the executor
-**    level (here we assume the single-command case).
-*/
-
 /**
+ * Behavior and design notes
+ *
+ * Cases:
+ *  - exit → prints "exit", exits with last_exit_status
+ *  - exit <num> → prints "exit", exits with (unsigned char)<num>
+ *  - exit <non-num> → prints "exit" + "numeric argument required", exits 2
+ *  - exit <num> <extra> → prints "exit" + "too many arguments", returns 1
+ *
+ * Parsing: optional [+-] followed by digits only. Overflow → invalid.
+ * LLONG_MIN rejected as overflow (strict implementation).
+ * "exit" printed on exit or user error (not in child processes).
+ *
  * Builtin: exit
  * Exit the shell with optional exit code
  * @param cmd Command structure with arguments

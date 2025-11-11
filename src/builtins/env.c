@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 14:36:19 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 20:42:49 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 21:52:54 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,22 +14,18 @@
 
 /**
  * Builtin: env
- * Prints all environment variables
- * @param cmd Command structure
+ * Prints all environment variables with values
+ * @param cmd Command structure (unused)
  * @param shell Shell state with envp
- * @return 0 on success, CMD_NOT_FOUND if arguments provided (fix #31)
+ * @return 0 on success
  */
 int	builtin_env(t_command *cmd, t_shell *shell)
 {
 	int	i;
 
+	(void)cmd;
 	if (!shell->envp)
 		return (0);
-	if (cmd->argv[1])
-	{
-		print_error_arg("env", cmd->argv[1], "No such file or directory");
-		return (CMD_NOT_FOUND);
-	}
 	i = 0;
 	while (shell->envp[i])
 	{

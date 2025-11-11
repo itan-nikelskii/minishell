@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/14 15:27:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 19:05:29 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 23:28:52 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -94,8 +94,6 @@ int	env_update(t_shell *shell, char *key, char *value)
 	int		idx;
 	char	*new_entry;
 
-	if (!shell || !key || !value)
-		return (-1);
 	new_entry = create_env_entry(key, value);
 	if (!new_entry)
 		return (-1);
@@ -104,14 +102,12 @@ int	env_update(t_shell *shell, char *key, char *value)
 	{
 		free(shell->envp[idx]);
 		shell->envp[idx] = new_entry;
+		return (0);
 	}
-	else
+	if (env_add(shell, new_entry) == -1)
 	{
-		if (env_add(shell, new_entry) == -1)
-		{
-			free(new_entry);
-			return (-1);
-		}
+		free(new_entry);
+		return (-1);
 	}
 	return (0);
 }
