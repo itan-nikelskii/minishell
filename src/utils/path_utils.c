@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   path_resolver.c                                    :+:      :+:    :+:   */
+/*   path_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:51:28 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 15:11:46 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 18:59:18 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
  * @param key Variable name (e.g., "PATH")
  * @param envp Environment array
  * @return Pointer to value part (after '='), or NULL if not found
+ *         Example: key="PATH", envp=["PATH=/usr/bin:/bin"] → "/usr/bin:/bin"
  */
 char	*get_env_value(char *key, char **envp)
 {
@@ -41,6 +42,7 @@ char	*get_env_value(char *key, char **envp)
  * Extract PATH directories from environment variables
  * @param envp Environment variables array
  * @return Malloc'd array of PATH directories, or NULL if PATH not found
+ *         Example: ["/usr/bin", "/bin"]
  */
 static char	**get_env_paths(char **envp)
 {
@@ -59,6 +61,7 @@ static char	**get_env_paths(char **envp)
  * @param dir Directory path
  * @param cmd Command name
  * @return Malloc'd full path string, or NULL on allocation failure
+ *         Example: dir="/usr/bin", cmd="ls" → "/usr/bin/ls"
  */
 static char	*build_full_path(const char *dir, const char *cmd)
 {
@@ -90,8 +93,6 @@ static char	*find_in_path(const char *cmd, char **env_paths)
 	char	*full_path;
 	int		i;
 
-	if (!env_paths || !cmd)
-		return (NULL);
 	i = 0;
 	while (env_paths[i])
 	{
@@ -112,8 +113,8 @@ static char	*find_in_path(const char *cmd, char **env_paths)
  * 0. Command is "." or ".." → return NULL (bash treats these specially)
  * 1. Command is "~" → expand to HOME (for bash compatibility)
  * 2. Command with '/' → return as-is (let execve handle errors)
- * 3. Command without '/' → search in PATH
- * 4. PATH not found → try current dir, else NULL
+ * 3. PATH not found → try current dir, else NULL
+ * 4. Command without '/' → search in PATH
  * @param command Command to resolve
  * @param envp Environment variables
  * @return Full path to executable, with fallback to "./command"
@@ -124,8 +125,6 @@ char	*resolve_path(char *command, char **envp)
 	char	**env_paths;
 	char	*path;
 
-	if (!command || !*command)
-		return (NULL);
 	if (ft_strncmp(command, ".", 2) == 0 || ft_strncmp(command, "..", 3) == 0)
 		return (NULL);
 	if (ft_strncmp(command, "~", 2) == 0)

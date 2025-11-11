@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 10:23:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 22:51:37 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 15:04:59 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,14 +68,13 @@ int	execute_command(t_command *cmd, t_shell *shell)
 }
 
 /**
- * Execute builtin in parent process
+ * Execute builtin in parent process with redirections
  * Handles redirections by saving/restoring stdin/stdout
- * Also handles redirections-only commands (no argv)
- * @param cmd Command to execute
+ * @param cmd Command to execute (must have argv)
  * @param shell Shell state
  * @return Exit status
  */
-static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
+static int	exec_builtin_in_parent_with_redir(t_command *cmd, t_shell *shell)
 {
 	int	in_fd;
 	int	out_fd;
@@ -91,22 +90,13 @@ static int	exec_builtin_in_parent(t_command *cmd, t_shell *shell)
 		return (cleanup_redir_fds(in_fd, out_fd), 1);
 	if (apply_redirections(in_fd, out_fd) == -1)
 		return (restore_std_fds(shell), 1);
-	if (cmd->argv && cmd->argv[0])
-		exit_status = execute_builtin(cmd, shell);
-	else
-		exit_status = 0;
+	exit_status = exec_builtin(cmd, shell);
 	restore_std_fds(shell);
 	return (exit_status);
 }
 
 /**
- * Execute external command in child process (fork + execve)
- *
- * Process flow:
- * 1. PARENT: fork() creates child process
- * 2. CHILD: exec_child_single() handles redirections and execve
- * 3. PARENT: waitpid() waits for child → returns exit status
- *
+ * Execute external command in child process
  * @param cmd Command to execute
  * @param shell Shell state
  * @return Exit status of the command
@@ -126,7 +116,7 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
 		return (EXIT_FAILURE);
 	}
 	if (pid == 0)
-		exec_child_single(cmd, shell);
+		exec_command_in_child(cmd, shell);
 	waitpid(pid, &status, 0);
 	print_signal_message(status);
 	setup_parent_ps1_signals();
@@ -140,31 +130,29 @@ int	exec_external_in_child(t_command *cmd, t_shell *shell)
  *   - Builtins with/without redirections
  *   - External commands
  *   - Redirections-only (no command, e.g., >file)
- *
+ *   - Empty commands (e.g., '')
  * @param cmd Command to execute (argv may be NULL for redirections-only)
  * @param shell Shell state
  * @return Exit status
  */
 int	execute_single_command(t_command *cmd, t_shell *shell)
 {
-	if (!cmd)
-		return (0);
 	if (!cmd->argv || !cmd->argv[0])
 	{
 		if (cmd->redirs)
-			return (exec_builtin_in_parent(cmd, shell));
+			return (apply_redirections_in_parent(cmd->redirs, shell));
 		return (0);
 	}
-	if (cmd->argv[0][0] == '\0')
+	if (!cmd->argv[0][0])
 	{
 		print_error(cmd->argv[0], "command not found");
-		return (127);
+		return (CMD_NOT_FOUND);
 	}
 	if (is_builtin(cmd->argv[0]))
 	{
 		if (cmd->redirs)
-			return (exec_builtin_in_parent(cmd, shell));
-		return (execute_builtin(cmd, shell));
+			return (exec_builtin_in_parent_with_redir(cmd, shell));
+		return (exec_builtin_in_parent_direct(cmd, shell));
 	}
 	return (exec_external_in_child(cmd, shell));
 }

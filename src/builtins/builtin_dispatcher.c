@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:38:26 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/23 13:50:19 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 13:12:26 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,8 +19,6 @@
  */
 int	is_builtin(char *cmd)
 {
-	if (!cmd)
-		return (0);
 	if (strcmp(cmd, "pwd") == 0)
 		return (1);
 	if (strcmp(cmd, "echo") == 0)
@@ -39,15 +37,13 @@ int	is_builtin(char *cmd)
 }
 
 /**
- * Executes a builtin command
+ * Core builtin dispatcher (no FD manipulation)
  * @param cmd Command structure
  * @param shell Shell state
  * @return Exit status
  */
-int	execute_builtin(t_command *cmd, t_shell *shell)
+int	exec_builtin(t_command *cmd, t_shell *shell)
 {
-	if (!cmd || !cmd->argv || !cmd->argv[0])
-		return (1);
 	if (strcmp(cmd->argv[0], "pwd") == 0)
 		return (builtin_pwd(cmd, shell));
 	if (strcmp(cmd->argv[0], "echo") == 0)
@@ -63,4 +59,16 @@ int	execute_builtin(t_command *cmd, t_shell *shell)
 	if (strcmp(cmd->argv[0], "exit") == 0)
 		return (builtin_exit(cmd, shell));
 	return (1);
+}
+
+/**
+ * Execute builtin in parent process without redirections
+ * Direct wrapper around exec_builtin()
+ * @param cmd Command to execute
+ * @param shell Shell state
+ * @return Exit status
+ */
+int	exec_builtin_in_parent_direct(t_command *cmd, t_shell *shell)
+{
+	return (exec_builtin(cmd, shell));
 }

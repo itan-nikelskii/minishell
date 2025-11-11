@@ -61,3 +61,30 @@ int	restore_std_fds(t_shell *shell)
 	}
 	return (status);
 }
+
+/**
+ * Apply redirections in parent process (redirections-only commands)
+ * Saves/restores stdin/stdout around redirection application
+ * Used for commands like: > file, < in > out, etc.
+ * @param redirs Redirection list to apply
+ * @param shell Shell state
+ * @return Exit status (0 on success, 1 on error, 130 on SIGINT)
+ */
+int	apply_redirections_in_parent(t_redir *redirs, t_shell *shell)
+{
+	int	in_fd;
+	int	out_fd;
+
+	if (setup_redirections(redirs, &in_fd, &out_fd) == -1)
+	{
+		if (g_signal_received == SIGINT)
+			return (130);
+		return (1);
+	}
+	if (save_std_fds(shell) == -1)
+		return (cleanup_redir_fds(in_fd, out_fd), 1);
+	if (apply_redirections(in_fd, out_fd) == -1)
+		return (restore_std_fds(shell), 1);
+	restore_std_fds(shell);
+	return (0);
+}

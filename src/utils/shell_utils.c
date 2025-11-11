@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/20 11:23:55 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/09 19:42:00 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 19:08:18 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -72,6 +72,12 @@ void	cleanup_and_exit(t_shell *shell, int status)
 
 /**
  * Map execve errno to shell-compatible exit codes
+ * EACCES: Permission denied → 126 (command found but not executable)
+ * ENOEXEC: Exec format error → 126 (invalid executable format)
+ * EISDIR: Is a directory → 126 (trying to execute a directory)
+ * ENOTDIR: Not a directory → 126 (path component not a directory)
+ * ENOENT: No such file or directory → 127 (command not found)
+ * Other errors → 1 (general failure)
  * @return Exit code corresponding to errno
  */
 int	map_execve_errno(void)
@@ -87,6 +93,10 @@ int	map_execve_errno(void)
 /**
  * Extract exit status from child process status
  * Handles both normal exit and signal termination
+ * WIFEXITED: true if child exited normally → return WEXITSTATUS (0-255)
+ * WEXITSTATUS: extracts the low 8 bits as exit code
+ * WIFSIGNALED: true if child killed by signal → return 128 + WTERMSIG
+ * WTERMSIG: extracts the signal number that terminated the child
  * @param status Status returned by waitpid()
  * @return Exit code (0-255 for normal exit, 128+signal for signals)
  */

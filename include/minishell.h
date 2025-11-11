@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 23:18:00 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 13:11:50 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,8 @@ int		exec_external_in_child(t_command *cmd, t_shell *shell);
 /* ************************************************************************** */
 
 int		is_builtin(char *cmd);
-int		execute_builtin(t_command *cmd, t_shell *shell);
+int		exec_builtin(t_command *cmd, t_shell *shell);
+int		exec_builtin_in_parent_direct(t_command *cmd, t_shell *shell);
 
 int		builtin_echo(t_command *cmd, t_shell *shell);
 int		builtin_cd(t_command *cmd, t_shell *shell);
@@ -105,6 +106,7 @@ int		setup_redirections(t_redir *redirs, int *in_fd, int *out_fd);
 int		apply_redirections(int in_fd, int out_fd);
 int		save_std_fds(t_shell *shell);
 int		restore_std_fds(t_shell *shell);
+int		apply_redirections_in_parent(t_redir *redirs, t_shell *shell);
 
 /* ************************************************************************** */
 /*                              HEREDOC                                       */
@@ -155,8 +157,7 @@ int		get_child_exit_status(int status);
 
 /* Execve utils */
 void	execve_or_die(t_command *cmd, t_shell *shell);
-void	exec_child_piped(t_command *cmd, t_shell *shell);
-void	exec_child_single(t_command *cmd, t_shell *shell);
+void	exec_command_in_child(t_command *cmd, t_shell *shell);
 
 /* Command utils */
 int		count_commands(t_command *cmd_list);

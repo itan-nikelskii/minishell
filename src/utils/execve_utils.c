@@ -6,7 +6,7 @@
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/17 16:27:35 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/06 14:43:32 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 19:06:38 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,14 +22,14 @@ static void	print_path_not_found_error(char *cmd_name, char **envp)
 	char	*pathenv;
 
 	pathenv = get_env_value("PATH", envp);
-	if (pathenv == NULL || pathenv[0] == '\0')
+	if (!pathenv || !pathenv[0])
 		print_error(cmd_name, "No such file or directory");
 	else
 		print_error(cmd_name, "command not found");
 }
 
 /**
- * Execute command directly with execve (no fork)
+ * Execute command directly with execve
  * This function never returns on success
  * Used in child processes after fork
  * @param cmd Command to execute
@@ -40,7 +40,7 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 	char	*path;
 	int		saved_errno;
 
-	if (!cmd->argv[0] || !*cmd->argv[0])
+	if (!cmd->argv[0][0])
 	{
 		print_error(NULL, "command not found");
 		cleanup_and_exit(shell, CMD_NOT_FOUND);
@@ -61,17 +61,14 @@ void	execve_or_die(t_command *cmd, t_shell *shell)
 }
 
 /**
- * Unified function to execute command in child process
- * Handles redirections, builtins (if allowed), and external commands
- * Also handles redirections-only commands (no argv)
- * This function never returns - it always exits
- * Called from fork in already-forked child (pipe dup2 already done by caller)
- * @param cmd Command to execute
+ * Execute command in child process (never returns, always exits)
+ * Handles: redirections, builtins, external commands
+ * Note: Redirections-only (no argv) handled here for pipelines only
+ *       (single commands handle this in parent - see execute_single_command)
+ * @param cmd Command to execute (argv may be NULL in pipeline context)
  * @param shell Shell state
- * @param allow_builtin If true, executes builtins; if false, treats as external
  */
-static void	exec_command_in_child(t_command *cmd, t_shell *shell,
-	int allow_builtin)
+void	exec_command_in_child(t_command *cmd, t_shell *shell)
 {
 	int	in_fd;
 	int	out_fd;
@@ -80,8 +77,6 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 	signal(SIGINT, SIG_DFL);
 	signal(SIGQUIT, SIG_DFL);
 	shell->in_child = true;
-	in_fd = STDIN_FILENO;
-	out_fd = STDOUT_FILENO;
 	if (cmd->redirs && setup_redirections(cmd->redirs, &in_fd, &out_fd) == -1)
 	{
 		if (shell->last_exit_status == 130)
@@ -92,34 +87,10 @@ static void	exec_command_in_child(t_command *cmd, t_shell *shell,
 		cleanup_and_exit(shell, EXIT_FAILURE);
 	if (!cmd->argv || !cmd->argv[0])
 		cleanup_and_exit(shell, 0);
-	if (allow_builtin && is_builtin(cmd->argv[0]))
+	if (is_builtin(cmd->argv[0]))
 	{
-		status = execute_builtin(cmd, shell);
+		status = exec_builtin(cmd, shell);
 		cleanup_and_exit(shell, status);
 	}
 	execve_or_die(cmd, shell);
-}
-
-/**
- * Execute command in child process for pipeline context
- * Allows builtins to be executed in child (won't affect parent state)
- * Pre: called in a forked child. Post: never returns
- * @param cmd Command to execute
- * @param shell Shell state
- */
-void	exec_child_piped(t_command *cmd, t_shell *shell)
-{
-	exec_command_in_child(cmd, shell, 1);
-}
-
-/**
- * Execute command in child process for single external command
- * Builtins already handled in parent, this is for external only
- * Pre: called in a forked child. Post: never returns
- * @param cmd Command to execute
- * @param shell Shell state
- */
-void	exec_child_single(t_command *cmd, t_shell *shell)
-{
-	exec_command_in_child(cmd, shell, 0);
 }

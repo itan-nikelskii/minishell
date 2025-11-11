@@ -17,7 +17,7 @@
  * Prints all environment variables
  * @param cmd Command structure
  * @param shell Shell state with envp
- * @return 0 on success, 127 if arguments provided (fix #31)
+ * @return 0 on success, CMD_NOT_FOUND if arguments provided (fix #31)
  */
 int	builtin_env(t_command *cmd, t_shell *shell)
 {
@@ -28,7 +28,7 @@ int	builtin_env(t_command *cmd, t_shell *shell)
 	if (cmd->argv[1])
 	{
 		print_error_arg("env", cmd->argv[1], "No such file or directory");
-		return (127);
+		return (CMD_NOT_FOUND);
 	}
 	i = 0;
 	while (shell->envp[i])

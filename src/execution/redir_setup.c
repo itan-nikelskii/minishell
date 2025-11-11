@@ -1,12 +1,12 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   redirections.c                                     :+:      :+:    :+:   */
+/*   redir_setup.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/16 09:28:14 by acossari          #+#    #+#             */
-/*   Updated: 2025/10/30 14:07:14 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/11 13:57:46 by antoniocoss      ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,8 +34,6 @@ static int	open_heredoc(t_redir *redir)
 {
 	int	fd;
 
-	if (!redir->hd_path)
-		return (print_error("heredoc", "not prepared"), -1);
 	fd = open(redir->hd_path, O_RDONLY);
 	if (fd == -1)
 		return (print_perror("open", redir->hd_path), -1);
@@ -64,9 +62,7 @@ static int	process_redir(t_redir *redir, int *in_fd, int *out_fd)
 	else if (redir->type == TOKEN_REDIR_APPEND)
 		fd = open(redir->target, O_WRONLY | O_CREAT | O_APPEND, 0644);
 	if (fd == -1 && redir->type != TOKEN_HEREDOC)
-		print_perror(NULL, redir->target);
-	if (fd == -1)
-		return (-1);
+		return(print_perror(NULL, redir->target), -1);
 	if (redir->type == TOKEN_HEREDOC || redir->type == TOKEN_REDIR_IN)
 		update_fd(in_fd, fd, STDIN_FILENO);
 	else

@@ -52,7 +52,7 @@ static pid_t	fork_and_exec(t_command *cmd, int i, t_pipe_ctx *ctx)
 	if (pid == 0)
 	{
 		setup_child_pipes(i, ctx);
-		exec_child_piped(cmd, ctx->shell);
+		exec_command_in_child(cmd, ctx->shell);
 	}
 	return (pid);
 }
