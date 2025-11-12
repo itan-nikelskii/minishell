@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   continuation.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/27 13:32:03 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 20:48:09 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 10:31:35 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

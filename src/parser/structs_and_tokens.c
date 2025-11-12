@@ -6,7 +6,7 @@
 /*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 14:49:21 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/07 10:18:13 by inikelsk         ###   ########.fr       */
+/*   Updated: 2025/11/12 10:31:13 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,7 @@ int	create_token_pipe(size_t *i, t_token_list *list)
 {
 	t_token	*token;
 
-	token = new_token(TOKEN_PIPE, strdup("|"));
+	token = new_token(TOKEN_PIPE, ft_strdup("|"));
 	if (!token || append_token(list, token) != 0)
 		return (-1);
 	*i = *i + 1;

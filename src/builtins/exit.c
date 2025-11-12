@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   exit.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 12:43:11 by antoniocoss       #+#    #+#             */
-/*   Updated: 2025/11/12 00:08:53 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 10:31:35 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

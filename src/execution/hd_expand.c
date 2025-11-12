@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   hd_expand.c                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/22 18:59:01 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/10 23:48:08 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 10:31:35 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 

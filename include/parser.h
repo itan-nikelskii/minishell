@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.h                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/29 13:36:27 by inikelsk          #+#    #+#             */
-/*   Updated: 2025/11/08 21:25:01 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 10:31:54 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
