@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: antoniocossari <antoniocossari@student.    +#+  +:+       +#+        */
+/*   By: inikelsk <inikelsk@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/10/13 09:07:42 by acossari          #+#    #+#             */
-/*   Updated: 2025/11/11 13:11:50 by antoniocoss      ###   ########.fr       */
+/*   Updated: 2025/11/12 09:31:23 by inikelsk         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -179,6 +179,9 @@ void	cleanup_redir_fds(int in_fd, int out_fd);
 int		find_in_array(char **arr, const char *key, bool require_equal);
 int		find_env(char **envp, char *key);
 int		find_xenv(char **xenv, const char *key);
+
+/* Exit utils */
+int		is_valid_exit_arg(const char *str, long long *out);
 
 /* Memory utils */
 void	free_array(char **array);
